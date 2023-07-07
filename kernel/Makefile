@@ -1,0 +1,114 @@
+KERNEL_VERSION=0.0.1
+KERNEL_ARCH=x86
+
+DEFAULT_HOST!=../default-host.sh
+HOST?=DEFAULT_HOST
+HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
+
+CFLAGS?=-O2 -g
+CPPFLAGS?=
+LDFLAGS?=
+LIBS?=
+
+DESTDIR?=
+PREFIX?=/usr
+BOOTDIR?=$(PREFIX)/boot
+INCLUDEDIR?=$(PREFIX)/include
+
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
+CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
+LDFLAGS:=$(LDFLAGS)
+LIBS:=$(LIBS) -nostdlib -lk -lgcc
+
+ARCHDIR=
+
+include make.config
+
+CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
+CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
+LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
+
+KERNEL_OBJS=\
+crt0.o \
+kernel/tty.o \
+kernel/common.o \
+kernel/gdtflush.o \
+kernel/gdt.o \
+kernel/idtflush.o \
+kernel/interrupt.o \
+kernel/isr.o \
+kernel/idt.o \
+kernel/pit.o \
+kernel/kheap.o \
+kernel/kernel.o \
+
+OBJS=\
+crti.o \
+crtbegin.o \
+$(KERNEL_OBJS) \
+crtend.o \
+crtn.o \
+
+LINK_LIST=\
+$(LDFLAGS) \
+crti.o \
+crtbegin.o \
+$(KERNEL_OBJS) \
+$(LIBS) \
+crtend.o \
+crtn.o \
+# \
+CFLAGS = -O2 -g -ffreestanding -Wall -Wextra \
+CPPFLAGS = -D__is_kernel -Iinclude \
+LDFLAGS =  \
+LIBS = -nostdlib -lk -lgcc \
+\
+ARCHDIR = \
+INCLUDEDIR = /usr/local/include\
+BOOTDIR = /usr/local/boot\
+\
+OBJS = \
+	crti.o \
+	crtbegin.o \
+	crt0.o \
+	tty.o \
+	common.o \
+	kernel/kernel.o \
+	crtend.o \
+	crtn.o \
+
+.PHONY: all clean install install-headers install-kernel
+.SUFFIXES: .o .c .S
+
+all: brownieos.kernel
+
+brownieos.kernel: $(OBJS) linker.ld
+	$(CC) -T linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	grub-file --is-x86-multiboot brownieos.kernel
+
+crtbegin.o crtend.o:
+	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+
+.c.o:
+	$(CC) -MD -DKERNEL_VERSION=\"$(KERNEL_VERSION)\" -DKERNEL_ARCH=\"$(KERNEL_ARCH)\" -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+
+.S.o:
+	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+
+install: install-headers install-kernel
+
+install-headers:
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
+
+install-kernel: brownieos.kernel
+	mkdir -p $(DESTDIR)$(BOOTDIR)
+	cp brownieos.kernel $(DESTDIR)$(BOOTDIR)
+
+clean:
+	rm -f brownieos.kernel
+	rm -f $(OBJS) *.o */*.o */*/*.o
+	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+
+-include $(OBJS:.o=.d)
