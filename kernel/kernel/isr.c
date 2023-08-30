@@ -1,17 +1,12 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <kernel/isr.h>
 #include <kernel/tty.h>
 #include <kernel/idt.h>
 #include <kernel/common.h>
 
 isr_t interrupt_handlers[256];
-
-void page_fault(regs_t* registers) {
-    printf("page fault\n");
-    printf("error code: %x\n", registers->err_code);
-    return;
-}
 
 // isr handler
 void isr_handler(regs_t* registers) {

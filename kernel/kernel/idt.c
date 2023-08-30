@@ -4,6 +4,7 @@
 #include <kernel/idt.h>
 #include <string.h>
 #include <kernel/common.h>
+#include <kernel/isr.h>
 
 idt_entry_t idt_entries[256];
 idt_ptr_t idt_ptr;

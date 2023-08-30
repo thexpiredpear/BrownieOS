@@ -67,7 +67,8 @@ boot_page_directory:
 	.skip 4096
 # Allocate page table, 4KiB page frames * 1024 entries = 4MiB. 
 # 1024 entries * 4 bytes per = 4096 bytes.
-boot_page_table1:
+.global boot_page_table
+boot_page_table:
 	.skip 4096
 
 # The kernel entry point.
@@ -75,32 +76,22 @@ boot_page_table1:
 .global _start
 .type _start, @function
 _start:
-	# Move physical address of boot_page_table1 into edi.
-	movl $(boot_page_table1 - 0xC0000000), %edi
+	# Move physical address of boot_page_table into edi.
+	movl $(boot_page_table - 0xC0000000), %edi
 	movl $0, %esi
 	# Map 1023 pages. 1024 is for the VGA text buffer.
 	movl $1023, %ecx
 
 0:
-	# Map kernel.
-	# If address is less than the kernel start (1MiB), map as "not present".
-	cmpl $_kernel_start, %esi
-	jl 2f
-	# If address is greater than or equal to the kernel end, stop mapping.
-	cmpl $(_kernel_end - 0xC0000000), %esi
-	jge 3f
-	# Map .text and .rodata as "present, read-only".
-	# Map .data and .bss as "present, writable".
-	# Move the address into edx.
 	movl %esi, %edx
-	# Set as "present", "writable" & clear low 12 bits.
 	orl $0x003, %edx
-	# If address is not in .text or .rodata, skip to mapping.
-	# If address is in .text or .rodata, clear "writable" bit.
+	cmpl $_kernel_start, %esi
+	jb clear_rw
 	cmpl $(_text_start - 0xC0000000), %esi
-	jl 1f
+	jb 1f
 	cmpl $(_rodata_end - 0xC0000000), %esi
-	jg 1f
+	jae 1f
+clear_rw:	
 	andl $0xFFFFFFFD, %edx
 
 1:
@@ -110,7 +101,7 @@ _start:
 2:
 	# Size of page is 4096 bytes.
 	addl $0x1000, %esi
-	# Size of entries in boot_page_table1 is 4 bytes.
+	# Size of entries in boot_page_table is 4 bytes.
 	addl $4, %edi
 	# Loop to the next entry if we haven't finished.
 	loop 0b
@@ -118,7 +109,7 @@ _start:
 3:
 	# Map VGA text buffer at 0xB8000 to 0xC03FF000 as "present, writable".
 	# Need to be able to write to the VGA text buffer.
-	movl $(0x000B8000 | 0x003), boot_page_table1 - 0xC0000000 + 1023 * 4
+	movl $(0x000B8000 | 0x003), boot_page_table - 0xC0000000 + 1023 * 4
 
 	# The page table is used at both page directory entry 0 (virtually from 0x0
 	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
@@ -127,9 +118,9 @@ _start:
 	# not change the next instruction, which continues to be physical. The CPU
 	# would instead page fault if there was no identity mapping.
 
-	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
+	# Map the page table to both virtual addresses 0x00000000-0x003FFFFF and 0xC0000000-0xC03FFFFF.
 	# Set as "present", "writable" & clear low 12 bits.
-	movl $boot_page_table1 - 0xC0000000, %edx
+	movl $boot_page_table - 0xC0000000, %edx
 	andl $0xFFFFF000, %edx
 	orl $0x003, %edx
 	# Put the physical address in edx into the page directory.
@@ -163,6 +154,8 @@ _start:
 
 	# Set up the stack.
 	mov $stack_top, %esp
+	pushl %eax
+	pushl %ebx
 
 	# Enter the high-level kernel.
 	call kmain

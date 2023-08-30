@@ -40,7 +40,8 @@ kernel/interrupt.o \
 kernel/isr.o \
 kernel/idt.o \
 kernel/pit.o \
-kernel/kheap.o \
+kernel/mm/kheap.o \
+kernel/mm/paging.o \
 kernel/kernel.o \
 
 OBJS=\

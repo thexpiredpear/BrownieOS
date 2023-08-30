@@ -2,12 +2,14 @@
 #include <stdint.h>
 #include <string.h>
 #include <kernel/common.h>
+#include <kernel/multiboot.h>
 #include <kernel/tty.h>
 #include <kernel/gdt.h>
 #include <kernel/idt.h>
 #include <kernel/pit.h>
 #include <kernel/isr.h>
 #include <kernel/kheap.h>
+#include <kernel/paging.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"
@@ -18,18 +20,22 @@
 
 void printlogo();
 
-void kmain(void) {
+void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	terminal_initialize();
 	gdt_init();
 	idt_init();
+	paging_init(mbd, magic);
 	pit_init(100);
 	char str[13];
 	printf("BrownieOS version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
 	printlogo();
 	int i = snprintf(str, 13, "Hello World!");
 	printf("%s - Wrote %d characters\n", str, i);
+	printf("Multiboot info at %x\n", mbd);
+	printf("Multiboot magic number: %x\n", magic);
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
+	/*
 	extern uint32_t ks;
 	extern uint32_t ke;
 	extern uint32_t ts;
@@ -46,18 +52,18 @@ void kmain(void) {
 	printf("%x TEXT START\n", ts);
 	printf("%x TEXT END\n\n", te);
 	printf("%x READONLY START\n", rs);
-	printf("%x	 READONLY END\n\n", re);
+	printf("%x READONLY END\n\n", re);
 	printf("%x DATA START\n", dtas);
 	printf("%x DATA END\n\n", dtae);
 	printf("%x BSS START\n", bs);
 	printf("%x BSS END\n\n", be);
 	printf("%x KERNEL END\n", ke);
-	
-	
+	*/
 }
 
 void printlogo() {
-	printf(R"(,-----.                                   ,--.            ,-----.  ,---.   
+	printf(R"(
+,-----.                                   ,--.            ,-----.  ,---.   
 |  |) /_ ,--.--. ,---. ,--.   ,--.,--,--, `--' ,---.     '  .-.  ''   .-'  
 |  .-.  \|  .--'| .-. ||  |.'.|  ||      \,--.| .-. :    |  | |  |`.  `-.  
 |  '--' /|  |   ' '-' '|   .'.   ||  ||  ||  |\   --.    '  '-'  '.-'    | 
