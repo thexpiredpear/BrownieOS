@@ -142,6 +142,12 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         panic("No memory map provided");
         return;
     }
+    // TODO: only reserve firs MiB automatically and base rest on page dir
+    // Reserve first 4MiB of memory for system/kernel
+    for(int addr = 0; addr < 0x400000; addr += 0x1000) {
+        set_frame(addr);
+    }
+    // TODO: Reserve rest of unavailable memory from grub memory map
     // Iterate through memory map & print info
     for(int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
@@ -163,9 +169,4 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         kernel_directory->tables[i] = (page_table_t*)((uint32_t)boot_page_directory[i] + 0xC0000000);
     }
     kernel_directory->directory_paddr = (uint32_t)(&kernel_directory) - 0xC0000000;
-    // Reserve first 1MB of memory
-    for(int tmp = 0; tmp < 0x100000; tmp += 0x1000) {
-        set_frame(tmp);
-    }
-    // TODO: Reserve rest of unavailable memory from grub memory map
 }
