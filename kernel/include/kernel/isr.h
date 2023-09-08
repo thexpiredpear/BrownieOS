@@ -12,7 +12,6 @@ typedef struct regs {
 
 typedef void (*isr_t)(regs_t*); // function pointer to custom isr handler
 
-void page_fault(regs_t*);
 void isr_set_handler(uint8_t, isr_t);
 void isr_handler(regs_t*);
 void irq_handler(regs_t*);

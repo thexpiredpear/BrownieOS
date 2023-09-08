@@ -95,7 +95,7 @@ clear_rw:
 	andl $0xFFFFFFFD, %edx
 
 1:
-	# Put the physical address in edx into the page table.
+	# Put the table entry in edx into the page table.
 	movl %edx, (%edi)
 
 2:

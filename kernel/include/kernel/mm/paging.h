@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <kernel/multiboot.h>
+#include <kernel/isr.h>
 
 typedef struct page {
     uint32_t present    : 1;   // Present in memory if set
@@ -25,7 +26,7 @@ typedef struct page_directory {
     uint32_t directory_paddr; // physical address for paging
 } page_directory_t;
 
-void page_fault(regs_t*)
+void page_fault(regs_t*);
 
 void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);

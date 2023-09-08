@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <kernel/paging.h>
+#include <kernel/mm/paging.h>
 #include <kernel/kheap.h>
 #include <kernel/multiboot.h>
 #include <kernel/common.h>
@@ -23,10 +23,10 @@ void page_fault(regs_t* registers) {
     printf("page fault!\n");
     uint32_t addr;
     asm volatile("mov %%cr2, %0" : "=r" (addr));
-    bool present = registers->err_code & 0x1;
-    bool write = registers->err_code & 0x2;
-    bool user = registers->err_code & 0x4;
-    bool reserved = registers->err_code & 0x8;
+    bool present = registers->err_code & 0b1;
+    bool write = registers->err_code & 0b10;
+    bool user = registers->err_code & 0b100;
+    bool reserved = registers->err_code & 0b1000;
     printf("addr: %x\n", addr);
     printf("present: %d\n", present);
     printf("write: %d\n", write);
@@ -35,6 +35,7 @@ void page_fault(regs_t* registers) {
     return;
 }
 
+// set frame as used
 void set_frame(uint32_t addr) {
     uint32_t frame = addr / 0x1000;
     uint32_t index = frame / 32;
@@ -42,6 +43,7 @@ void set_frame(uint32_t addr) {
     framemap[index] |= (0x1 << offset);
 }
 
+// clear a frame
 void clear_frame(uint32_t addr) {
     uint32_t frame = addr / 0x1000;
     uint32_t index = frame / 32;
@@ -49,6 +51,7 @@ void clear_frame(uint32_t addr) {
     framemap[index] &= ~(0x1 << offset);
 }
 
+// check if frame is set
 bool test_frame(uint32_t addr) {
     uint32_t frame = addr / 0x1000;
     uint32_t index = frame / 32;
@@ -56,14 +59,42 @@ bool test_frame(uint32_t addr) {
     return (framemap[index] & (0x1 << offset));
 }
 
+// return the first available frame
 uint32_t first_frame() {
-    for(uint32_t frame = 0; frame < memory; frame += 0x1000) {
-        if(!test_frame(frame)) {
-            return frame/0x1000;
+    for(uint32_t addr = 0; addr < memory; addr += 0x1000) {
+        if(!test_frame(addr)) {
+            return addr/0x1000;
         }
     }
     return -1;
 }
+
+// return first available frame starting from an address
+uint32_t first_frame_from(uint32_t addr) {
+    addr &= 0xFFFFF000;
+    for(addr; addr < memory; addr += 0x1000) {
+        if(!test_frame(addr)) {
+            return addr/0x1000;
+        }
+    }
+    return -1;
+}
+
+// check if there are count number of available frames
+bool avail_frames(uint32_t count) {
+    uint32_t free = 0;
+    for(uint32_t frame = 0; frame < memory; frame += 0x1000) {
+        if(!test_frame(frame)) {
+            free++;
+            if(free == count) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// TODO: function to allocate mult. frames at once sequentially for eff.
 
 void alloc_frame(page_t* page, bool user, bool rw) {
     if(page->frame != 0) {
@@ -99,20 +130,23 @@ void flush_tlb() {
 }
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
+    // Register page fault handler
     isr_set_handler(14, &page_fault);
     if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
         panic("Invalid multiboot magic number");
         return;
     }
+    // Convert multiboot info physical address to virtual address
     mbd = (multiboot_info_t*)((uint32_t)mbd + 0xC0000000);
     if(!(mbd->flags & 0x00000020)) {
         panic("No memory map provided");
         return;
     }
+    // Iterate through memory map & print info
     for(int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
         char* type = (mmap->type == 1) ? "Available" : "Reserved";
-        printf("Base Address: %x%x | Length: %x%x | Type: %s\n", mmap->addr_high, mmap->addr_low, mmap->len_high, mmap->len_low, type);
+        printf("Base Address: 0x%x%x | Length: 0x%x%x | Type: %s\n", mmap->addr_high, mmap->addr_low, mmap->len_high, mmap->len_low, type);
     }   
     memory = (uint64_t)0x100000000; // TODO use grub memory map to determine memory size
     nframes = memory / 0x1000;
@@ -133,5 +167,5 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     for(int tmp = 0; tmp < 0x100000; tmp += 0x1000) {
         set_frame(tmp);
     }
-    // TODO Reserve rest of unavailable memory from grub memory map
+    // TODO: Reserve rest of unavailable memory from grub memory map
 }

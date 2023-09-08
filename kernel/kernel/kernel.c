@@ -9,7 +9,7 @@
 #include <kernel/pit.h>
 #include <kernel/isr.h>
 #include <kernel/kheap.h>
-#include <kernel/paging.h>
+#include <kernel/mm/paging.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"

@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <kernel/kheap.h>
-#include <kernel/paging.h>
+#include <kernel/mm/paging.h>
 
 extern uint32_t _kernel_end;
 extern page_directory_t* kernel_directory;
