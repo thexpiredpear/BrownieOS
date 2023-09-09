@@ -33,7 +33,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("%s - Wrote %d characters\n", str, i);
 	printf("Multiboot info at %x\n", mbd);
 	printf("Multiboot magic number: %x\n", magic);
-	printsyms();
+	// printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
 }

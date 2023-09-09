@@ -129,6 +129,23 @@ void flush_tlb() {
     asm volatile("mov %0, %%cr3":: "r"(cr3));
 }
 
+void reserve(uint32_t start, uint32_t length) {
+    int end;
+    // round start to lower page boundary
+    if(start % 0x1000 != 0) {
+        start &= 0xFFFFF000;
+    }
+    // round length to upper page boundary
+    if(length % 0x1000 != 0) {
+        length = (length & 0xFFFFF000) + 0x1000;
+    }
+    length--;
+    end = start + length;
+    for(uint64_t addr = start; addr < end; addr += 0x1000) {
+        set_frame(addr);
+    }
+}
+
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Register page fault handler
     isr_set_handler(14, &page_fault);
@@ -136,25 +153,7 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         panic("Invalid multiboot magic number");
         return;
     }
-    // Convert multiboot info physical address to virtual address
-    mbd = (multiboot_info_t*)((uint32_t)mbd + 0xC0000000);
-    if(!(mbd->flags & 0x00000020)) {
-        panic("No memory map provided");
-        return;
-    }
-    // TODO: only reserve firs MiB automatically and base rest on page dir
-    // Reserve first 4MiB of memory for system/kernel
-    for(int addr = 0; addr < 0x400000; addr += 0x1000) {
-        set_frame(addr);
-    }
-    // TODO: Reserve rest of unavailable memory from grub memory map
-    // Iterate through memory map & print info
-    for(int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
-        multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
-        char* type = (mmap->type == 1) ? "Available" : "Reserved";
-        printf("Base Address: 0x%x%x | Length: 0x%x%x | Type: %s\n", mmap->addr_high, mmap->addr_low, mmap->len_high, mmap->len_low, type);
-    }   
-    memory = (uint64_t)0x100000000; // TODO use grub memory map to determine memory size
+    memory = 0x100000000; // TODO use grub memory map to determine memory size
     nframes = memory / 0x1000;
     // Bitmap of frames
     framemap = (uint32_t*)kmalloc((nframes / 32)*sizeof(uint32_t));
@@ -163,10 +162,37 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     kernel_directory = (page_directory_t*)kmalloc_align(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
+    // Convert multiboot info physical address to virtual address
+    mbd = (multiboot_info_t*)((uint32_t)mbd + 0xC0000000);
+    if(!(mbd->flags & 0x00000020)) {
+        panic("No memory map provided");
+        return;
+    }
+    // Iterate through memory map & print info
+    for(int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
+        multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
+        uint64_t addr = (uint64_t)((mmap->addr_high << 32) | mmap->addr_low);
+        uint64_t len = (uint64_t)((mmap->len_high << 32) | mmap->len_low);
+        char* type = (mmap->type == 1) ? "Available" : "Reserved";
+        printf(
+        "Base Address: 0x%x%x | Length: 0x%x%x | Type: %s\n", 
+        mmap->addr_high, mmap->addr_low, mmap->len_high, mmap->len_low, type
+        );
+        if(mmap->type != 1) {
+            reserve(mmap->addr_low, mmap->len_low);
+        }
+    }
     // Copy page tables from boot page directory
     for(int i = 0; i < 1024; i++) {
         kernel_directory->tables_paddr[i] = (uint32_t)boot_page_directory[i];
         kernel_directory->tables[i] = (page_table_t*)((uint32_t)boot_page_directory[i] + 0xC0000000);
     }
     kernel_directory->directory_paddr = (uint32_t)(&kernel_directory) - 0xC0000000;
+    // Reserve first 4MiB of memory for system/kernel
+    // TODO: only reserve first MiB automatically and base rest on page dir
+    for(int addr = 0; addr < 0x400000; addr += 0x1000) {
+        set_frame(addr);
+    }
+
+    // TODO: Reserve rest of unavailable memory from grub memory map
 }

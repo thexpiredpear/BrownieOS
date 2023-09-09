@@ -40,6 +40,8 @@ void free_frame(page_t* page);
 void swap_dir(page_directory_t* dir);
 void flush_tlb(void);
 
+void reserve(uint32_t start, uint32_t length);
+
 void paging_init(multiboot_info_t* mbd, uint32_t magic);
 
 page_t* get_page_from_vaddr(uint32_t vaddr, bool create, page_directory_t* dir);
