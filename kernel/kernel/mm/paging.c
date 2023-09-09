@@ -130,7 +130,7 @@ void flush_tlb() {
 }
 
 void reserve(uint32_t start, uint32_t length) {
-    int end;
+    uint32_t end;
     // round start to lower page boundary
     if(start % 0x1000 != 0) {
         start &= 0xFFFFF000;
@@ -141,7 +141,7 @@ void reserve(uint32_t start, uint32_t length) {
     }
     length--;
     end = start + length;
-    for(uint64_t addr = start; addr < end; addr += 0x1000) {
+    for(uint64_t addr = (uint64_t)start; addr < end; addr += 0x1000) {
         set_frame(addr);
     }
 }
