@@ -5,7 +5,7 @@ DEFAULT_HOST!=../default-host.sh
 HOST?=DEFAULT_HOST
 HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
-CFLAGS?=-O2 -g
+CFLAGS?=-O0 -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -42,6 +42,7 @@ kernel/idt.o \
 kernel/pit.o \
 kernel/mm/kheap.o \
 kernel/mm/paging.o \
+kernel/mm/vmm.o \
 kernel/kernel.o \
 
 OBJS=\

@@ -29,7 +29,7 @@ void* kalloc_pages(size_t pages) {
     // TODO: make this more efficient
     // track for new page tables needed 
 
-    if(!avail_frame(pages)) {
+    if(!avail_frames(pages)) {
         // TODO: panic? not really sure
         return 0;
     }
@@ -37,7 +37,7 @@ void* kalloc_pages(size_t pages) {
     for(int i = 768; i < 1024; i++) {
         if(current_directory->tables[i]) {
             for(int j = 0; j < 1024; j++) {
-                if(current_directory->tables[i]->pages[j].frame) {
+                if(!(current_directory->tables[i]->pages[j].frame)) {
                     contig++;
                     if(contig == 1) {
                         start = (void*)(i * 0x400000 + j * 0x1000);
@@ -51,8 +51,8 @@ void* kalloc_pages(size_t pages) {
                         int cur_table = 0;
                         int cur_page = 0;
                         while(pos <= end) {
-                            cur_table = (uint32_t)(pos / 0x400000);
-                            cur_page = (uint32_t)((pos % 0x400000) / 0x1000);
+                            cur_table = (uint32_t)((uint32_t)pos / 0x400000);
+                            cur_page = (uint32_t)(((uint32_t)pos % 0x400000) / 0x1000);
                             if(!current_directory->tables[cur_table]->pages[cur_page].frame) {
                                 alloc_frame(
                                 &current_directory->
@@ -67,18 +67,13 @@ void* kalloc_pages(size_t pages) {
                         return start;
                     }
                 } else {
-                    table_changes = 0;
                     contig = 0;
                     start = 0;
                 }
             }
         } else {
-            table_changes = 0;
             contig = 0;
             start = 0;
-        }
-        if(contig) {
-            table_changes++;
         }
     }
 }

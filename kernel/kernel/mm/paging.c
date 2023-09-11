@@ -120,7 +120,7 @@ void free_frame(page_t* page) {
 void swap_dir(page_directory_t* dir) {
     current_directory = dir;
     // Move the page directory address into the cr3 register
-    asm volatile("mov %0, %%cr3":: "r"(&dir->tables_paddr));
+    asm volatile("mov %0, %%cr3":: "r"(dir->directory_paddr));
 }
 
 void flush_tlb() {
@@ -156,10 +156,10 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     memory = 0x100000000; // TODO use grub memory map to determine memory size
     nframes = memory / 0x1000;
     // Bitmap of frames
-    framemap = (uint32_t*)kmalloc((nframes / 32)*sizeof(uint32_t));
+    framemap = (uint32_t*)wmmalloc((nframes / 32)*sizeof(uint32_t));
     memset(framemap, 0, (nframes / 32)*sizeof(uint32_t));
     // Create kernel page directory
-    kernel_directory = (page_directory_t*)kmalloc_align(sizeof(page_directory_t));
+    kernel_directory = (page_directory_t*)wmmalloc_align(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
     // Convert multiboot info physical address to virtual address
@@ -184,15 +184,26 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     }
     // Copy page tables from boot page directory
     for(int i = 0; i < 1024; i++) {
-        kernel_directory->tables_paddr[i] = (uint32_t)boot_page_directory[i];
-        kernel_directory->tables[i] = (page_table_t*)((uint32_t)boot_page_directory[i] + 0xC0000000);
+        uint32_t dir_entry = (uint32_t)boot_page_directory[i];
+        if(dir_entry) {
+            // virtual address to access page table
+            page_table_t* boot_page_table = (page_table_t*)((dir_entry & 0xFFFFF000)+0xC0000000);
+            page_table_t* new_page_table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
+            for(int j = 0; j < 1024; j++) {
+                new_page_table->pages[j] = boot_page_table->pages[j];
+            }
+            uint32_t new_page_table_paddr = (uint32_t)(new_page_table) - 0xC0000000;
+            uint32_t new_dir_entry = (new_page_table_paddr & 0xFFFFF000) | (dir_entry & 0x00000FFF);
+            kernel_directory->tables_paddr[i] = new_dir_entry;
+            kernel_directory->tables[i] = (uint32_t)new_page_table;
+        }
     }
-    kernel_directory->directory_paddr = (uint32_t)(&kernel_directory) - 0xC0000000;
+    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
     // Reserve first 4MiB of memory for system/kernel
     // TODO: only reserve first MiB automatically and base rest on page dir
     for(int addr = 0; addr < 0x400000; addr += 0x1000) {
         set_frame(addr);
     }
-
+    swap_dir(kernel_directory);
     // TODO: Reserve rest of unavailable memory from grub memory map
 }

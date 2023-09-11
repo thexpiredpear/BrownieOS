@@ -21,12 +21,14 @@ typedef struct page_table {
 } page_table_t;
 
 typedef struct page_directory {
-    uint32_t tables_paddr[1024]; // physical addresses for paging
-    page_table_t* tables[1024]; // virtual addresses for r/w access
+    uint32_t tables_paddr[1024]; // dir entries, physical addresses for paging
+    page_table_t* tables[1024]; // virtual addresses for r/w access - NO PARAMS
     uint32_t directory_paddr; // physical address for paging
 } page_directory_t;
 
 void page_fault(regs_t*);
+
+bool avail_frames(uint32_t count);
 
 void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
