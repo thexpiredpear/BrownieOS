@@ -1,5 +1,6 @@
 #include <kernel/common.h>
 #include <stdint.h>
+#include <stdio.h>
 
 void outb(uint16_t port, uint8_t value)
 {

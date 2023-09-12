@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-uint32_t kmalloc(size_t size);
-uint32_t kmalloc_align(size_t size);
+uint32_t wmmalloc(size_t size);
+uint32_t wmmalloc_align(size_t size);
 
 #endif

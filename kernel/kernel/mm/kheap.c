@@ -2,13 +2,13 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <kernel/kheap.h>
-#include <kernel/paging.h>
+#include <kernel/mm/paging.h>
 
 extern uint32_t _kernel_end;
 extern page_directory_t* kernel_directory;
 uint32_t kheap = (uint32_t)&_kernel_end;
 
-uint32_t kmalloc(size_t size) {
+uint32_t wmmalloc(size_t size) {
     if(kheap & 0x00000007) {
         kheap &= 0xFFFFFFF8;
         kheap += 0x00000008;
@@ -18,7 +18,7 @@ uint32_t kmalloc(size_t size) {
     return ret;
 }
 
-uint32_t kmalloc_align(size_t size) {
+uint32_t wmmalloc_align(size_t size) {
     if(kheap & 0x00000FFF) {
         kheap &= 0xFFFFF000;
         kheap += 0x00001000;
