@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <kernel/kheap.h>
+#include <kernel/mm/kheap.h>
 #include <kernel/mm/paging.h>
 
 extern uint32_t _kernel_end;

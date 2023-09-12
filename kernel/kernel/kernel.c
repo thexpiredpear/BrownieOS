@@ -8,7 +8,7 @@
 #include <kernel/idt.h>
 #include <kernel/pit.h>
 #include <kernel/isr.h>
-#include <kernel/kheap.h>
+#include <kernel/mm/kheap.h>
 #include <kernel/mm/paging.h>
 #include <kernel/mm/vmm.h>
 
