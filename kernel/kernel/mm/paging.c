@@ -116,6 +116,12 @@ void free_frame(page_t* page) {
         return;
     }
     clear_frame(frame * 0x1000);
+    page->present = 0;
+    page->rw = 0;
+    page->user = 0;
+    page->accessed = 0;
+    page->dirty = 0;
+    page->unused = 0;
     page->frame = 0;
 }
 

@@ -7,6 +7,7 @@
 #include <kernel/kheap.h>
 
 extern page_directory_t* kernel_directory;
+extern page_directory_t* current_directory;
 
 void* kalloc_pages(size_t pages) {
     // ONLY USED FOR KERNEL MAPPING
@@ -23,19 +24,14 @@ void* kalloc_pages(size_t pages) {
     // copy entries from tables[] to dir_entry[]
     // if physical pages allocated, return start ptr
     // start at 0xC0000000 (3GiB) for kernel space mapping
-    // TODO: only works for <= 1024 (cant allocate new page tables!)
     uint32_t needed_null_tables = (pages - 1) / 1024 + 1;
     uint32_t contig = 0;
     uint32_t contig_null_tables = 0;
     void* start = 0;
     uint32_t start_null_tables = 0;
     bool found = false;
-    // TODO: make this more efficient
-    // track for new page tables needed 
-
     if(!avail_frames(pages)) {
-        // TODO: panic? not really sure
-        return 0;
+        return (void*)0xFFFFFFFF;
     }
     // start in kernel space
     for(int i = 768; i < 1024; i++) {
@@ -123,4 +119,17 @@ void* kalloc_pages(size_t pages) {
         return (void*)(start_null_tables * 0x400000);
     }
     return (void*)0xFFFFFFFF;
+}
+
+void free_pages(void* addr, size_t pages) {
+    // TODO: free page tables if fully empty
+    uint32_t start = (uint32_t)addr;
+    uint32_t end = start + (pages * 0x1000);
+    uint32_t table;
+    uint32_t page;
+    for(uint32_t pos = start; pos < end; pos += 0x1000) {
+        table = pos / 0x400000;
+        page = (pos % 0x400000) / 0x1000;
+        free_frame(&current_directory->tables[table]->pages[page]);
+    }
 }
