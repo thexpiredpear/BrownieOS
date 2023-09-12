@@ -34,8 +34,11 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("%s - Wrote %d characters\n", str, i);
 	printf("Multiboot info at %x\n", mbd);
 	printf("Multiboot magic number: %x\n", magic);
-	void* ptr = kalloc_pages(1);
-	printf("%x",(uint32_t)ptr);
+	void* ptr = kalloc_pages(1023);
+	void* ptr2 = kalloc_pages(2);
+	void* ptr3 = kalloc_pages(0xFFFFFFFF);
+	printf("ptr: %x\n", ptr);
+	printf("ptr2: %x\n", ptr2);
 	// printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 

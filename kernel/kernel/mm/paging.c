@@ -70,6 +70,7 @@ uint32_t first_frame() {
 }
 
 // return first available frame starting from an address
+/*
 uint32_t first_frame_from(uint32_t addr) {
     addr &= 0xFFFFF000;
     for(addr; addr < memory; addr += 0x1000) {
@@ -79,6 +80,7 @@ uint32_t first_frame_from(uint32_t addr) {
     }
     return -1;
 }
+*/
 
 // check if there are count number of available frames
 bool avail_frames(uint32_t count) {
@@ -146,6 +148,18 @@ void reserve(uint32_t start, uint32_t length) {
     }
 }
 
+uint32_t v_to_paddr(uint32_t addr) {
+    uint32_t table = addr / 0x400000;
+    uint32_t page = (addr % 0x400000) / 0x1000;
+    return (current_directory->tables[table]->pages[page].frame * 0x1000) + (addr % 0x1000);
+}
+
+void copy_page_table_entries(page_table_t* src, page_table_t* dest) {
+    for(int i = 0; i < 1024; i++) {
+        dest->pages[i] = src->pages[i];
+    }
+}
+
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Register page fault handler
     isr_set_handler(14, &page_fault);
@@ -169,10 +183,10 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         return;
     }
     // Iterate through memory map & print info
-    for(int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
+    for(uint32_t i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
-        uint64_t addr = (uint64_t)((mmap->addr_high << 32) | mmap->addr_low);
-        uint64_t len = (uint64_t)((mmap->len_high << 32) | mmap->len_low);
+        // uint64_t addr = (uint64_t)(((uint64_t)(mmap->addr_high) << 32) | mmap->addr_low);
+        // uint64_t len = (uint64_t)(((uint64_t)(mmap->len_high) << 32) | mmap->len_low);
         char* type = (mmap->type == 1) ? "Available" : "Reserved";
         printf(
         "Base Address: 0x%x%x | Length: 0x%x%x | Type: %s\n", 
@@ -193,9 +207,12 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
                 new_page_table->pages[j] = boot_page_table->pages[j];
             }
             uint32_t new_page_table_paddr = (uint32_t)(new_page_table) - 0xC0000000;
-            uint32_t new_dir_entry = (new_page_table_paddr & 0xFFFFF000) | (dir_entry & 0x00000FFF);
-            kernel_directory->tables_paddr[i] = new_dir_entry;
-            kernel_directory->tables[i] = (uint32_t)new_page_table;
+            page_dir_entry_t new_dir_entry;
+            new_dir_entry.present = 1;
+            new_dir_entry.rw = 1;
+            new_dir_entry.frame = new_page_table_paddr / 0x1000;
+            kernel_directory->page_dir_entries[i] = new_dir_entry;
+            kernel_directory->tables[i] = (page_table_t*)new_page_table;
         }
     }
     kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
@@ -205,5 +222,4 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         set_frame(addr);
     }
     swap_dir(kernel_directory);
-    // TODO: Reserve rest of unavailable memory from grub memory map
 }
