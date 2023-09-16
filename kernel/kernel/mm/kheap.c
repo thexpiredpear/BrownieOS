@@ -6,7 +6,13 @@
 
 extern uint32_t _kernel_end;
 extern page_directory_t* kernel_directory;
+extern page_directory_t* current_directory;
 uint32_t kheap = (uint32_t)&_kernel_end;
+ordered_array_t* header_array;
+ordered_array_t* footer_array;
+kheap_info_t info;
+header_t* header_array_ptr[0x400];
+footer_t* footer_array_ptr[0x400];
 
 uint32_t wmmalloc(size_t size) {
     if(kheap & 0x00000007) {
@@ -27,19 +33,15 @@ uint32_t wmmalloc_align(size_t size) {
     kheap += size;
     return ret;
 }
-/*
-uint32_t kmalloc_phys(size_t size, uint32_t* phys) {
-    if(kheap & 0x00000007) {
-        kheap &= 0xFFFFFFF8;
-        kheap += 0x00000008;
-    }
-    uint32_t ret = kheap;
-    uint32_t dir_idx = ret >> 22;
-    uint32_t table_idx = ret >> 12 & 0x03FF;
-    if(kernel_directory->tables[dir_idx]) {
-        if(kernel_directory->tables[dir_idx]->pages[table_idx]) {
-            *phys = kernel_directory->tables[dir_idx]->pages[table_idx]->frame * 0x1000 + (ret & 0x00000FFF);
-        }
-    }
+
+void kheap_init() {
+    header_array = init_ordered_array_place((void*)(&header_array_ptr), 0x400);
+    footer_array = init_ordered_array_place((void*)(&footer_array_ptr), 0x400);
+    info.start = (uint32_t)kalloc_pages(1024);
+    info.end = info.start + 0x400000;
+    info.size = info.end - info.start;
+    info.max = (uint32_t)(0x100000000 - info.start)
+    info.free = info.size;
+    info.used = 0;
+    info.magic = KHEAP_MAGIC;
 }
-*/

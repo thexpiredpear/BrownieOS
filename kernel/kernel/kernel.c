@@ -18,7 +18,7 @@
 #ifndef KERNEL_ARCH
 #define KERNEL_ARCH "x86"
 #endif
-
+	
 void printlogo();
 
 void kmain(multiboot_info_t* mbd, uint32_t magic) {
@@ -34,11 +34,21 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("%s - Wrote %d characters\n", str, i);
 	printf("Multiboot info at %x\n", mbd);
 	printf("Multiboot magic number: %x\n", magic);
+	// TESTING VMM
 	void* ptr = kalloc_pages(1);
+	printf("%x\n", ptr); // should print 0xC0400000
 	free_pages(ptr, 1);
-	void* ptr2 = kalloc_pages(1);
-	printf("ptr: %x\n", ptr);
-	printf("ptr2: %x\n", ptr2);
+	void* ptr2 = kalloc_pages(2);
+	printf("%x\n", ptr2); // should print 0xC0400000
+	free_pages(ptr2+0x1000, 1);
+	void* ptr3 = kalloc_pages(1022);
+	printf("%x\n", ptr3); // should print 0xC0401000
+	void* ptr4 = kalloc_pages(1);
+	printf("%x\n", ptr4); // should print 0xC07FF000
+	free_pages(ptr, 1);
+	free_pages(ptr3, 1022);
+	void* ptr5 = kalloc_pages(1024);
+	printf("%x\n", ptr5); // should print 0xC0800000
 	// printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
