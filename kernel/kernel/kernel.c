@@ -49,6 +49,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	free_pages(ptr3, 1022);
 	void* ptr5 = kalloc_pages(1024);
 	printf("%x\n", ptr5); // should print 0xC0800000
+	kheap_init();
 	// printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 

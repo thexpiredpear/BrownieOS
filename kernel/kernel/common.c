@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// TODO: implement
+// TODO: implement w/ kmalloc
 // ordered_array_t init_ordered_array(uint32_t max_size) {}
 
 ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size) {
@@ -18,7 +18,7 @@ ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size) {
    return ordered_array;
 }
 
-bool insert_ordered_array(uint32_t val, ordered_array_t* ordered_array) {
+bool insert_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
    if(ordered_array->size < ordered_array->max_size) {
          uint32_t i = ordered_array->size;
          while(i > 0 && ordered_array->predicate(val, ordered_array->array[i - 1])) {
@@ -32,7 +32,7 @@ bool insert_ordered_array(uint32_t val, ordered_array_t* ordered_array) {
    return false;
 }
 
-void remove_ordered_array(uint32_t i, ordered_array_t* ordered_array) {
+void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i) {
    while(i < ordered_array->size - 1) {
       ordered_array->array[i] = ordered_array->array[i + 1]; 
       i++;
@@ -41,11 +41,11 @@ void remove_ordered_array(uint32_t i, ordered_array_t* ordered_array) {
    ordered_array->size--;
 }
 
-uint32_t get_ordered_array(uint32_t i, ordered_array_t* ordered_array) {
+uint32_t get_ordered_array(ordered_array_t* ordered_array, uint32_t i) {
    return ordered_array->array[i];
 }
 
-uint32_t find_ordered_array(uint32_t val, ordered_array_t* ordered_array) {
+uint32_t find_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
    uint32_t i = 0;
    while(i < ordered_array->size) {
       if(ordered_array->array[i] == val) {
@@ -56,10 +56,10 @@ uint32_t find_ordered_array(uint32_t val, ordered_array_t* ordered_array) {
    return 0xFFFFFFFF;
 }
 
-// TODO: implement
+// TODO: implement w/ kfree
 // void destroy_ordered_array(ordered_array_t* ordered_array) {}
 
-bool less_predicate(uint32_t a, uint32_t b) `{
+bool less_predicate(uint32_t a, uint32_t b) {
    return a < b ? true : false;
 }
 
