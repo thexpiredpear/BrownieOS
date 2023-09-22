@@ -21,7 +21,7 @@ typedef struct ordered_array ordered_array_t;
 
 // ordered_array_t init_ordered_array(uint32_t max_size);
 ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size);
-bool insert_ordered_array(ordered_array_t* ordered_array, uint32_t val);
+uint32_t insert_ordered_array(ordered_array_t* ordered_array, uint32_t val);
 void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i);
 uint32_t get_ordered_array(ordered_array_t* ordered_array, uint32_t i);
 uint32_t find_ordered_array(ordered_array_t* ordered_array, uint32_t val);

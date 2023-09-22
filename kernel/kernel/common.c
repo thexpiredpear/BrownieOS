@@ -18,18 +18,18 @@ ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size) {
    return ordered_array;
 }
 
-bool insert_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
+uint32_t insert_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
    if(ordered_array->size < ordered_array->max_size) {
          uint32_t i = ordered_array->size;
-         while(i > 0 && ordered_array->predicate(val, ordered_array->array[i - 1])) {
+         while(i > 0 && ordered_array->predicate(val, ordered_array->array[i - 1])) { 
             ordered_array->array[i] = ordered_array->array[i - 1];
             i--;
          }
          ordered_array->array[i] = val;
          ordered_array->size++;
-         return true;
+         return i;
    }
-   return false;
+   return 0xFFFFFFFF;
 }
 
 void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i) {

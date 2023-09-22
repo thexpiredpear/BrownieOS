@@ -34,22 +34,11 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("%s - Wrote %d characters\n", str, i);
 	printf("Multiboot info at %x\n", mbd);
 	printf("Multiboot magic number: %x\n", magic);
-	// TESTING VMM
-	void* ptr = kalloc_pages(1);
-	printf("%x\n", ptr); // should print 0xC0400000
-	free_pages(ptr, 1);
-	void* ptr2 = kalloc_pages(2);
-	printf("%x\n", ptr2); // should print 0xC0400000
-	free_pages(ptr2+0x1000, 1);
-	void* ptr3 = kalloc_pages(1022);
-	printf("%x\n", ptr3); // should print 0xC0401000
-	void* ptr4 = kalloc_pages(1);
-	printf("%x\n", ptr4); // should print 0xC07FF000
-	free_pages(ptr, 1);
-	free_pages(ptr3, 1022);
-	void* ptr5 = kalloc_pages(1024);
-	printf("%x\n", ptr5); // should print 0xC0800000
 	kheap_init();
+	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x100000);
+	printf("kmalloc addr %x\n", max_is_a_nerd_a);
+	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(1024);
+	printf("kmalloc addr %x\n", max_is_a_nerd_b);
 	// printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
