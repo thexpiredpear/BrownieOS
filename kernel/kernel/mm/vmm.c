@@ -27,7 +27,7 @@ void* kalloc_pages(size_t pages) {
             contig_null_tables = 0;
             for(int j = 0; j < 1024; j++) {
                 page_t page = table->pages[j];
-                // some monstrosity to bitmask the page
+                // monstrosity to bitmask page, access as uint32_t
                 if(*(uint32_t*)&page == 0) {
                     contig++;
                     if(contig == 1) {

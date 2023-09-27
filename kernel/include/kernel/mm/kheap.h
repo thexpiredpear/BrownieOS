@@ -39,13 +39,20 @@ struct footer {
 uint32_t wmmalloc(size_t size);
 uint32_t wmmalloc_align(size_t size);
 
+void print_kheap();
+
 void* kmalloc(size_t size);
+void kfree(void* ptr);
+
+void unify(header_t* header, footer_t* footer);
+header_t* unify_left(header_t* header, footer_t* footer);
+footer_t* unify_right(header_t* header, footer_t* footer);
 
 header_t* alloc_from_header(header_t* header, footer_t* footer, size_t size);
 
-bool kmalloc_prechecks(heap_info_t* heap_info, 
+bool kmm_prechecks(heap_info_t* heap_info, 
 ordered_array_t* header_arr_info, ordered_array_t* footer_arr_info);
-bool kmalloc_checks(header_t* header, footer_t* footer);
+bool kmm_checks(header_t* header, footer_t* footer);
 
 void kheap_init();
 
