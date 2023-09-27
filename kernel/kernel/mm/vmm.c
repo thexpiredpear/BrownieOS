@@ -4,26 +4,13 @@
 #include <string.h>
 #include <kernel/mm/vmm.h>
 #include <kernel/mm/paging.h>
-#include <kernel/kheap.h>
+#include <kernel/mm/kheap.h>
 
 extern page_directory_t* kernel_directory;
 extern page_directory_t* current_directory;
 
 void* kalloc_pages(size_t pages) {
     // ONLY USED FOR KERNEL MAPPING
-    // Find contiguous virtual address space in current directory
-    // Iterate through page tables
-    // Alg:
-    // create a start ptr and contig page count
-    // iterate through page dir once
-    // skip over null page tables and reset contig & start ptr
-    // iterate through pages in current table
-    // if page is free, contig++ & if contig == 0, set start ptr
-    // if page is not free, reset contig page count and start ptr
-    // if contig page count == pages, try to allocate physical pages
-    // copy entries from tables[] to dir_entry[]
-    // if physical pages allocated, return start ptr
-    // start at 0xC0000000 (3GiB) for kernel space mapping
     uint32_t needed_null_tables = (pages - 1) / 1024 + 1;
     uint32_t contig = 0;
     uint32_t contig_null_tables = 0;
@@ -40,7 +27,7 @@ void* kalloc_pages(size_t pages) {
             contig_null_tables = 0;
             for(int j = 0; j < 1024; j++) {
                 page_t page = table->pages[j];
-                // some monstrosity to bitmask the page
+                // monstrosity to bitmask page, access as uint32_t
                 if(*(uint32_t*)&page == 0) {
                     contig++;
                     if(contig == 1) {
