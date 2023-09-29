@@ -37,6 +37,41 @@ uint32_t wmmalloc_align(size_t size) {
     return ret;
 }
 
+bool kmm_prechecks(heap_t* heap, 
+ordered_array_t* header_array, ordered_array_t* footer_array) {
+    bool ret = true;
+    if(heap->magic != KHEAP_MAGIC_64) {
+        printf("HEAP MAGIC FAILED\n");
+        ret = false;
+    }
+    if(header_array->size != footer_array->size) {
+        printf("HEADER AND FOOTER ARRAY SIZE MISMATCH\n");
+        ret = false;
+    }
+    return ret;
+}
+
+bool kmm_checks(header_t* header, footer_t* footer) {
+    bool ret = true;
+    if(header->magic != KHEAP_MAGIC_32) {
+        printf("HEADER MAGIC FAILED %x\n", header->magic);
+        ret = false;
+    }
+    if(footer->magic != KHEAP_MAGIC_64) {
+        printf("FOOTER MAGIC FAILED %x\n", footer->magic);
+        ret = false;
+    }
+    if(header->footer != footer) {
+        printf("HEADER DOES NOT POINT TO FOOTER %x\n", header->footer);
+        ret = false;
+    }
+    if(footer->header != header) {
+        printf("FOOTER DOES NOT POINT TO HEADER %x\n", footer->header);
+        ret = false;
+    }
+    return ret;
+}
+
 void print_kheap() {
     printf("heap info - start: %x, end: %x, magic: %x\n", kheap.start, kheap.end, kheap.magic);
     for(int i = 0; i < kheap_header_array.size; i++) {
@@ -166,41 +201,6 @@ void unify(heap_t* heap, header_t* header, footer_t* footer) {
     unify_right(heap, header, footer);
     header->used = 0;
     return;
-}
-
-bool kmm_prechecks(heap_t* heap, 
-ordered_array_t* header_array, ordered_array_t* footer_array) {
-    bool ret = true;
-    if(heap->magic != KHEAP_MAGIC_64) {
-        printf("HEAP MAGIC FAILED\n");
-        ret = false;
-    }
-    if(header_array->size != footer_array->size) {
-        printf("HEADER AND FOOTER ARRAY SIZE MISMATCH\n");
-        ret = false;
-    }
-    return ret;
-}
-
-bool kmm_checks(header_t* header, footer_t* footer) {
-    bool ret = true;
-    if(header->magic != KHEAP_MAGIC_32) {
-        printf("HEADER MAGIC FAILED %x\n", header->magic);
-        ret = false;
-    }
-    if(footer->magic != KHEAP_MAGIC_64) {
-        printf("FOOTER MAGIC FAILED %x\n", footer->magic);
-        ret = false;
-    }
-    if(header->footer != footer) {
-        printf("HEADER DOES NOT POINT TO FOOTER %x\n", header->footer);
-        ret = false;
-    }
-    if(footer->header != header) {
-        printf("FOOTER DOES NOT POINT TO HEADER %x\n", footer->header);
-        ret = false;
-    }
-    return ret;
 }
 
 void* alloc(heap_t* heap, size_t size) {
