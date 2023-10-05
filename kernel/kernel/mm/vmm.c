@@ -18,7 +18,7 @@ void* kalloc_pages(size_t pages) {
     uint32_t start_null_tables = 0;
     bool found = false;
     if(!avail_frames(pages)) {
-        return (void*)0xFFFFFFFF;
+        return NULL;
     }
     // start in kernel space
     for(int i = 768; i < 1024; i++) {
@@ -105,7 +105,7 @@ void* kalloc_pages(size_t pages) {
         }
         return (void*)(start_null_tables * 0x400000);
     }
-    return (void*)0xFFFFFFFF;
+    return NULL;
 }
 
 void free_pages(void* addr, size_t pages) {

@@ -74,7 +74,7 @@ bool kmm_checks(header_t* header, footer_t* footer) {
 
 void print_kheap() {
     printf("heap info - start: %x, end: %x, magic: %x\n", kheap.start, kheap.end, kheap.magic);
-    for(int i = 0; i < kheap_header_array.size; i++) {
+    for(uint32_t i = 0; i < kheap_header_array.size; i++) {
         header_t* header = (header_t*)get_ordered_array(&kheap_header_array, i);
         footer_t* footer = (footer_t*)get_ordered_array(&kheap_footer_array, i);
         uint32_t block_start = ((uint32_t)header + 0x00000010) & 0xFF;
@@ -82,31 +82,6 @@ void print_kheap() {
         char* used = (header->used == 0) ? "free" : "used";
         printf("%x|%x --%s-- %x|%x\n", (uint32_t)header, block_start, used, (uint32_t)footer, footer_end);
     }
-}
-
-header_t* alloc_from_header(header_t* header, footer_t* footer, size_t size) {
-    footer_t* new_footer = (footer_t*)((uint32_t)header + size + sizeof(header_t)); // place new footer @ end of new block
-    header_t* new_header = (header_t*)((uint32_t)new_footer + sizeof(footer_t)); // place new header @ start of new block
-
-    new_footer->header = header;
-    new_footer->magic = KHEAP_MAGIC_64;
-    new_footer->res = 0;
-
-    new_header->size = header->size - (size + sizeof(header_t) + sizeof(footer_t)); 
-    new_header->footer = footer;
-    new_header->used = 0;
-    new_header->magic = KHEAP_MAGIC_32;
-
-    footer->header = new_header;
-
-    header->size = size;
-    header->footer = new_footer;
-    header->used = 1;
-
-    insert_ordered_array(&kheap_header_array, (uint32_t)new_header);
-    insert_ordered_array(&kheap_footer_array, (uint32_t)new_footer);
-
-    return header;
 }
 
 header_t* alloc_from_block(heap_t* heap, header_t* header, footer_t* footer, size_t size) {

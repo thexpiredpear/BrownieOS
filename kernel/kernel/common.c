@@ -63,24 +63,29 @@ bool less_predicate(uint32_t a, uint32_t b) {
    return a < b ? true : false;
 }
 
-void outb(uint16_t port, uint8_t value)
-{
+void outb(uint16_t port, uint8_t value) {
    asm volatile ("outb %1, %0" : : "dN" (port), "a" (value));
 }
 
-uint8_t inb(uint16_t port)
-{
+uint8_t inb(uint16_t port) {
    uint8_t ret;
    asm volatile("inb %1, %0" : "=a" (ret) : "dN" (port));
    return ret;
 }
 
-uint16_t inw(uint16_t port)
-{
+uint16_t inw(uint16_t port) {
    uint16_t ret;
    asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
    return ret;
 }  
+
+void cli() {
+   asm volatile("cli");
+}
+
+void sti() {
+   asm volatile("sti");
+}
 
 __attribute__((noreturn)) 
 void panic(const char* message)
