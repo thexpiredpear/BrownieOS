@@ -9,13 +9,18 @@
 #include <stdio.h>
 #include <kernel/common.h>
 
-struct heap_info { 
+struct heap { 
+    uint16_t user;
+    uint16_t rw;
     uint32_t start; // start of heap
     uint32_t end; // end of heap
+    uint32_t max_addr; // max address of heap
+    ordered_array_t* header_array;
+    ordered_array_t* footer_array;
     uint64_t magic; // 0xB10CB10CB10CB10C
 };
 
-typedef struct heap_info heap_info_t;
+typedef struct heap heap_t;
 
 typedef struct footer footer_t;
 typedef struct header header_t;
@@ -41,17 +46,21 @@ uint32_t wmmalloc_align(size_t size);
 
 void print_kheap();
 
+header_t* alloc_from_header(header_t* header, footer_t* footer, size_t size);
+header_t* alloc_from_block(heap_t* heap, header_t* header, footer_t* footer, size_t size);
+
+void* alloc(heap_t* heap, size_t size);
+void free(heap_t* heap, void* ptr);
+
 void* kmalloc(size_t size);
 void kfree(void* ptr);
 
-void unify(header_t* header, footer_t* footer);
-header_t* unify_left(header_t* header, footer_t* footer);
-footer_t* unify_right(header_t* header, footer_t* footer);
+void unify(heap_t* heap, header_t* header, footer_t* footer);
+header_t* unify_left(heap_t* heap, header_t* header, footer_t* footer);
+footer_t* unify_right(heap_t* heap, header_t* header, footer_t* footer);
 
-header_t* alloc_from_header(header_t* header, footer_t* footer, size_t size);
-
-bool kmm_prechecks(heap_info_t* heap_info, 
-ordered_array_t* header_arr_info, ordered_array_t* footer_arr_info);
+bool kmm_prechecks(heap_t* heap, 
+ordered_array_t* header_array, ordered_array_t* footer_array);
 bool kmm_checks(header_t* header, footer_t* footer);
 
 void kheap_init();

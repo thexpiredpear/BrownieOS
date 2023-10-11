@@ -4,7 +4,7 @@
 #include <kernel/gdt.h>
 
 gdt_entry_t gdt_entries[5];
-gdt_ptr_t   gdt_ptr;
+gdt_ptr_t gdt_ptr;
 
 void gdt_init() {
     gdt_ptr.limit = (sizeof(gdt_entry_t) * 5) - 1;
@@ -12,10 +12,10 @@ void gdt_init() {
 
     // FLAT SEGMENTATION MODEL (0x00 - 0xFFFFFFFF)
     gdt_set_gate(0, 0, 0, 0, 0); // Null segment
-    gdt_set_gate(1, 0, 0xFFFFF, 0x9A, 0xCF); // Code segment
-    gdt_set_gate(2, 0, 0xFFFFF, 0x92, 0xCF); // Data segment
-    gdt_set_gate(3, 0, 0xFFFFF, 0xFA, 0xCF); // User mode code segment
-    gdt_set_gate(4, 0, 0xFFFFF, 0xF2, 0xCF); // User mode data segment
+    gdt_set_gate(1, 0, 0xFFFFFF, 0b10011010, 0b11001111); // Code segment
+    gdt_set_gate(2, 0, 0xFFFFFF, 0b10010010, 0b11001111); // Data segment
+    gdt_set_gate(3, 0, 0xFFFFFF, 0b11111010, 0b11001111); // User mode code segment
+    gdt_set_gate(4, 0, 0xFFFFFF, 0b11110010, 0b11001111); // User mode data segment
 
     gdt_flush((uint32_t)(&gdt_ptr));
 }
