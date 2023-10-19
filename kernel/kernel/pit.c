@@ -9,7 +9,7 @@ double pit_osc_frequency = 3579545.0 / 3.0;
 uint32_t pit_cur_frequency = 0;
 uint32_t tick = 0;
 
-void pit_handler(regs_t* registers) {
+void pit_handler(int_regs_t* registers) {
     tick++;
     return;
 }

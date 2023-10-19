@@ -31,25 +31,12 @@ isr_common_handler:
 
     pushal
 
-    pushw %ds
-    pushw %es
-    pushw %fs
-    pushw %gs
-    
-
-    movw $0x10, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-
+    # PUSH STACK POINTER TO ACCESS REGISTERS
     movl %esp, %eax
     pushl %eax
 
     # STACK TOP -> BOTTOM (low to high addresses)
-    # PUSHED MANUALLY
-    # uint16_t gs, uint16_t fs, uint16_t es, uint16_t ds
-    # PUSHAD
+    # PUSHAL
     # uint32_t edi, uint32_t esi, uint32_t ebp, uint32_t esp, uint32_t ebx, uint32_t edx, uint32_t ecx, uint32_t eax
     # PUSHED BY ISR 
     # uint32_t int_no, uint32_t err_code
@@ -60,11 +47,6 @@ isr_common_handler:
     addl $0x4, %esp # remove pushed parameter
 
     # RESTORE REGISTERS IN STACK ORDER
-
-    popw %gs
-    popw %fs
-    popw %es
-    popw %ds
 
     popal
 
@@ -78,25 +60,12 @@ irq_common_handler:
 
     pushal
 
-    pushw %ds
-    pushw %es
-    pushw %fs
-    pushw %gs
-    
-
-    movw $0x10, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-
+    # PUSH STACK POINTER TO ACCESS REGISTERS
     movl %esp, %eax
     pushl %eax
 
     # STACK TOP -> BOTTOM (low to high addresses)
-    # PUSHED MANUALLY
-    # uint16_t gs, uint16_t fs, uint16_t es, uint16_t ds
-    # PUSHAD
+    # PUSHAL
     # uint32_t edi, uint32_t esi, uint32_t ebp, uint32_t esp, uint32_t ebx, uint32_t edx, uint32_t ecx, uint32_t eax
     # PUSHED BY ISR 
     # uint32_t int_no, uint32_t err_code
@@ -107,11 +76,6 @@ irq_common_handler:
     addl $0x4, %esp # remove pushed parameter
 
     # RESTORE REGISTERS IN STACK ORDER
-
-    popw %gs
-    popw %fs
-    popw %es
-    popw %ds
 
     popal
 

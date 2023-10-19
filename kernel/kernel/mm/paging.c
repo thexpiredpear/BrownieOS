@@ -19,7 +19,7 @@ extern uint32_t boot_page_table[];
 page_directory_t* kernel_directory;
 page_directory_t* current_directory;
 
-void page_fault(regs_t* registers) {
+void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
     uint32_t addr;
     asm volatile("mov %%cr2, %0" : "=r" (addr));

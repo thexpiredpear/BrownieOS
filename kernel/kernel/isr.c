@@ -9,7 +9,7 @@
 isr_t interrupt_handlers[256];
 
 // isr handler
-void isr_handler(regs_t* registers) {
+void isr_handler(int_regs_t* registers) {
     isr_t handler = interrupt_handlers[registers->int_no];
     if(handler) {
         handler(registers);
@@ -20,7 +20,7 @@ void isr_handler(regs_t* registers) {
 }
 
 // irq handler
-void irq_handler(regs_t* registers) {
+void irq_handler(int_regs_t* registers) {
     isr_t handler = interrupt_handlers[registers->int_no];
     if(handler) {
         handler(registers);

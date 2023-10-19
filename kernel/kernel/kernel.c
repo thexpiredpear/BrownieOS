@@ -65,12 +65,11 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	gdt_init();
 	idt_init();
 	paging_init(mbd, magic);
-	pit_init(1000);
 	printf("BrownieOS kernel version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
 	printlogo();
 	kheap_init();
-	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(1024);
-	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(1024);
+	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
+	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
 	printf("\nkmalloc: %x\n", max_is_a_nerd_a);
 	printf("kmalloc: %x\n\n", max_is_a_nerd_b);
 	print_kheap();
@@ -80,9 +79,9 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("\nkfree: %x\n\n", max_is_a_nerd_b);
 	kfree((void*)max_is_a_nerd_b);
 	print_kheap();
-	printf("\n");
-	kpause();
-	// printsyms();
+	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
+	pit_init(100000);
+	kpause();
 }
