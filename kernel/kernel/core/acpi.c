@@ -3,11 +3,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <kernel/acpi.h>
-#include <kernel/multiboot.h>
-#include <kernel/common.h>
-#include <kernel/mm/vmm.h>
-#include <kernel/mm/kheap.h>
+#include <core/acpi.h>
+#include <core/multiboot.h>
+#include <core/common.h>
+#include <mm/vmm.h>
+#include <mm/kheap.h>
 
 #define RSDP_SIG "RSD PTR "
 #define MADT_SIG "APIC"

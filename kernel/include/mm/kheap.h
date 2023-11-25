@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <kernel/common.h>
+#include <core/common.h>
 
 struct heap { 
     uint16_t user;

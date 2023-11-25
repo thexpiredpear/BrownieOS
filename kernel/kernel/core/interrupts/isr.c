@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <kernel/isr.h>
-#include <kernel/tty.h>
-#include <kernel/idt.h>
-#include <kernel/common.h>
+#include <core/isr.h>
+#include <drivers/tty.h>
+#include <core/idt.h>
+#include <core/common.h>
 
 isr_t interrupt_handlers[256];
 

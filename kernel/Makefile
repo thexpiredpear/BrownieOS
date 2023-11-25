@@ -30,37 +30,37 @@ LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
-boot/crt0.o \
-kernel/tty.o \
-kernel/common.o \
-kernel/gdtflush.o \
-kernel/gdt.o \
-kernel/idtflush.o \
-kernel/interrupt.o \
-kernel/isr.o \
-kernel/idt.o \
-kernel/pit.o \
-kernel/acpi.o \
+kernel/boot/crt0.o \
+kernel/drivers/tty.o \
+kernel/core/common.o \
+kernel/core/gdtflush.o \
+kernel/core/gdt.o \
+kernel/core/interrupts/idtflush.o \
+kernel/core/interrupts/interrupt.o \
+kernel/core/interrupts/isr.o \
+kernel/core/interrupts/idt.o \
+kernel/drivers/pit.o \
+kernel/core/acpi.o \
 kernel/mm/kheap.o \
 kernel/mm/paging.o \
 kernel/mm/vmm.o \
-kernel/kernel.o \
+kernel/core/kernel.o \
 
 OBJS=\
-boot/crti.o \
+kernel/boot/crti.o \
 crtbegin.o \
 $(KERNEL_OBJS) \
 crtend.o \
-boot/crtn.o \
+kernel/boot/crtn.o \
 
 LINK_LIST=\
 $(LDFLAGS) \
-boot/crti.o \
+kernel/boot/crti.o \
 crtbegin.o \
 $(KERNEL_OBJS) \
 $(LIBS) \
 crtend.o \
-boot/crtn.o \
+kernel/boot/crtn.o \
 # \
 CFLAGS = -O2 -g -ffreestanding -Wall -Wextra \
 CPPFLAGS = -D__is_kernel -Iinclude \

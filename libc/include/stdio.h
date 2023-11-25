@@ -3,7 +3,7 @@
 
 #include <sys/cdefs.h>
 #include <stddef.h>
-#include <kernel/tty.h>
+#include <drivers/tty.h>
 
 #define EOF (-1)
 

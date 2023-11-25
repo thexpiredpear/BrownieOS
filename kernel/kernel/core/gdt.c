@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <kernel/tty.h>
-#include <kernel/gdt.h>
+#include <drivers/tty.h>
+#include <core/gdt.h>
 
 gdt_entry_t gdt_entries[5];
 gdt_ptr_t gdt_ptr;

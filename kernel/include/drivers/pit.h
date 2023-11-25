@@ -2,7 +2,7 @@
 #define _KERNEL_PIT_H
 
 #include <stdint.h>
-#include <kernel/isr.h>
+#include <core/isr.h>
 
 void pit_init(uint32_t frequency);
 

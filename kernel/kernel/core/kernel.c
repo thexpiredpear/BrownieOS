@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include <kernel/common.h>
-#include <kernel/multiboot.h>
-#include <kernel/tty.h>
-#include <kernel/gdt.h>
-#include <kernel/idt.h>
-#include <kernel/pit.h>
-#include <kernel/isr.h>
-#include <kernel/acpi.h>
-#include <kernel/mm/kheap.h>
-#include <kernel/mm/paging.h>
-#include <kernel/mm/vmm.h>
+#include <core/common.h>
+#include <core/multiboot.h>
+#include <drivers/tty.h>
+#include <core/gdt.h>
+#include <core/idt.h>
+#include <drivers/pit.h>
+#include <core/isr.h>
+#include <core/acpi.h>
+#include <mm/kheap.h>
+#include <mm/paging.h>
+#include <mm/vmm.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"

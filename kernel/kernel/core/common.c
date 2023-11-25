@@ -1,4 +1,4 @@
-#include <kernel/common.h>
+#include <core/common.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>

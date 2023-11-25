@@ -2,9 +2,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <kernel/mm/vmm.h>
-#include <kernel/mm/paging.h>
-#include <kernel/mm/kheap.h>
+#include <mm/vmm.h>
+#include <mm/paging.h>
+#include <mm/kheap.h>
 
 extern page_directory_t* kernel_directory;
 extern page_directory_t* current_directory;

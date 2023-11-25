@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <kernel/common.h>
-#include <kernel/mm/kheap.h>
-#include <kernel/mm/paging.h>
-#include <kernel/mm/vmm.h>
+#include <core/common.h>
+#include <mm/kheap.h>
+#include <mm/paging.h>
+#include <mm/vmm.h>
 
 extern uint32_t _kernel_end;
 extern page_directory_t* kernel_directory;

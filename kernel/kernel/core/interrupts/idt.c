@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <kernel/tty.h>
-#include <kernel/idt.h>
+#include <drivers/tty.h>
+#include <core/idt.h>
 #include <string.h>
-#include <kernel/common.h>
-#include <kernel/isr.h>
+#include <core/common.h>
+#include <core/isr.h>
 
 idt_entry_t idt_entries[256];
 idt_ptr_t idt_ptr;
