@@ -30,7 +30,7 @@ LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
-crt0.o \
+boot/crt0.o \
 kernel/tty.o \
 kernel/common.o \
 kernel/gdtflush.o \
@@ -47,20 +47,20 @@ kernel/mm/vmm.o \
 kernel/kernel.o \
 
 OBJS=\
-crti.o \
+boot/crti.o \
 crtbegin.o \
 $(KERNEL_OBJS) \
 crtend.o \
-crtn.o \
+boot/crtn.o \
 
 LINK_LIST=\
 $(LDFLAGS) \
-crti.o \
+boot/crti.o \
 crtbegin.o \
 $(KERNEL_OBJS) \
 $(LIBS) \
 crtend.o \
-crtn.o \
+boot/crtn.o \
 # \
 CFLAGS = -O2 -g -ffreestanding -Wall -Wextra \
 CPPFLAGS = -D__is_kernel -Iinclude \

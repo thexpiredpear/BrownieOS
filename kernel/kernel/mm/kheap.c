@@ -37,8 +37,7 @@ uint32_t wmmalloc_align(size_t size) {
     return ret;
 }
 
-bool kmm_prechecks(heap_t* heap, 
-ordered_array_t* header_array, ordered_array_t* footer_array) {
+bool kmm_prechecks(heap_t* heap, ordered_array_t* header_array, ordered_array_t* footer_array) {
     bool ret = true;
     if(heap->magic != KHEAP_MAGIC_64) {
         printf("HEAP MAGIC FAILED\n");
