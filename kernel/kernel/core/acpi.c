@@ -7,7 +7,7 @@
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <mm/vmm.h>
-#include <mm/kheap.h>
+#include <mm/kmm.h>
 
 #define RSDP_SIG "RSD PTR "
 #define MADT_SIG "APIC"

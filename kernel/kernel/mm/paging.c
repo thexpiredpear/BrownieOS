@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <mm/paging.h>
-#include <mm/kheap.h>
+#include <mm/kmm.h>
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <core/idt.h>

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <mm/vmm.h>
 #include <mm/paging.h>
-#include <mm/kheap.h>
+#include <mm/kmm.h>
 
 extern page_directory_t* kernel_directory;
 extern page_directory_t* current_directory;

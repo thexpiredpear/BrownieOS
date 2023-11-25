@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <core/common.h>
-#include <mm/kheap.h>
+#include <mm/kmm.h>
 #include <mm/paging.h>
 #include <mm/vmm.h>
 
