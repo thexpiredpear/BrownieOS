@@ -48,7 +48,7 @@ struct page_directory {
 
 typedef struct page_directory page_directory_t;
 
-void page_fault(regs_t*);
+void page_fault(int_regs_t*);
 
 bool avail_frames(uint32_t count);
 

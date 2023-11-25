@@ -6,7 +6,15 @@
 #include <stddef.h>
 
 // TODO: implement w/ kmalloc
-// ordered_array_t init_ordered_array(uint32_t max_size) {}
+ordered_array_t init_ordered_array(uint32_t max_size) {
+   ordered_array_t ordered_array;
+   ordered_array.array = (uint32_t*)kmalloc(max_size * sizeof(uint32_t));
+   ordered_array.size = 0;
+   ordered_array.max_size = max_size;
+   ordered_array.predicate = &less_predicate;
+   memset(ordered_array.array, 0, max_size * sizeof(uint32_t));
+   return ordered_array;
+}
 
 ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size) {
    ordered_array_t ordered_array;
@@ -87,11 +95,27 @@ void sti() {
    asm volatile("sti");
 }
 
+void cpuid(int cmd, uint32_t *a, uint32_t *d) {
+  asm volatile("cpuid":"=a"(*a),"=d"(*d):"a"(cmd):"ecx","ebx");
+}
+
+void get_msr(uint32_t msr, uint32_t* lo, uint32_t* hi) {
+   asm volatile("rdmsr":"=a"(*lo),"=d"(*hi):"c"(msr));
+}
+
+void set_msr(uint32_t msr, uint32_t lo, uint32_t hi) {
+   asm volatile("wrmsr"::"a"(lo),"d"(hi),"c"(msr));
+}
+
 __attribute__((noreturn)) 
-void panic(const char* message)
+void panic(char* message)
 {
    printf("kernel panic: ");
    printf(message);
    asm volatile("cli");
    asm volatile("hlt");
+}
+
+void gdb_stop() {
+   printf("gdb stop\n");
 }

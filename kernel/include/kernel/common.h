@@ -34,6 +34,10 @@ uint8_t inb(uint16_t port);
 uint16_t inw(uint16_t port);
 void cli();
 void sti();
-void panic();
+void cpuid(int cmd, uint32_t *a, uint32_t *d);
+void get_msr(uint32_t msr, uint32_t* lo, uint32_t* hi);
+void set_msr(uint32_t msr, uint32_t lo, uint32_t hi);
+void panic(char* message);
+void gdb_stop(void);
 
 #endif

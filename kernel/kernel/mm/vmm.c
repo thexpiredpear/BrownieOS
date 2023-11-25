@@ -74,6 +74,7 @@ void* kalloc_pages(size_t pages) {
         // Allocate new page tables
         while(contig_null_tables) {
             uint32_t index = start_null_tables + (needed_null_tables - contig_null_tables);
+            // TODO: switch wmmalloc to malloc somehow??? not sure what cascade will be
             page_table_t* table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
             memset(table, 0, sizeof(page_table_t));
             kernel_directory->tables[index] = table;
@@ -119,4 +120,35 @@ void free_pages(void* addr, size_t pages) {
         page = (pos % 0x400000) / 0x1000;
         free_frame(&current_directory->tables[table]->pages[page]);
     }
+}
+
+void* access_paddr_DANGER(uint32_t paddr) {
+    uint32_t first_null_table;
+    // find a free kernel space page
+    for(int i = 768; i < 1024; i++) {
+        page_table_t* table = kernel_directory->tables[i];
+        if((uint32_t)table != 0) {
+            for(int j = 0; j < 1024; j++) {
+                page_t* page = &(table->pages[j]);
+                // monstrosity to bitmask page, access as uint32_t
+                if(*(uint32_t*)page == 0) {
+                    // set page able to access paddr
+                    page->present = 1;
+                    page->rw = 1;
+                    page->user = 0;
+                    page->frame = paddr / 0x1000;
+                    return (void*)(i * 0x400000 + j * 0x1000 + (paddr % 0x1000));
+                }
+            }
+        } 
+    }
+    return NULL;
+}
+
+void clraccess_paddr_DANGER(void* vaddr) {
+    page_table_t* table = kernel_directory->tables[(uint32_t)vaddr / 0x400000];
+    page_t page = table->pages[((uint32_t)vaddr % 0x400000) / 0x1000];
+    uint32_t* page_ptr = (uint32_t*)&page;
+    *page_ptr = 0;
+    return;
 }
