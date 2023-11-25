@@ -193,7 +193,27 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uint32_t)((mbd->mmap_addr + i))+0xC0000000);
         // uint64_t addr = (uint64_t)(((uint64_t)(mmap->addr_high) << 32) | mmap->addr_low);
         // uint64_t len = (uint64_t)(((uint64_t)(mmap->len_high) << 32) | mmap->len_low);
-        char* type = (mmap->type == 1) ? "Available" : "Reserved";
+        char* type;
+        switch(mmap->type) {
+            case 1:
+                type = "Available";
+                break;
+            case 2:
+                type = "Reserved";
+                break;
+            case 3:
+                type = "ACPI Reclaimable";
+                break;
+            case 4:
+                type = "NVS";
+                break;
+            case 5:
+                type = "Bad Memory";
+                break;
+            default:
+                type = "Unknown";
+                break;
+        }
         printf(
         "Base Address: 0x%x%x | Length: 0x%x%x | Type: %s\n", 
         mmap->addr_high, mmap->addr_low, mmap->len_high, mmap->len_low, type
