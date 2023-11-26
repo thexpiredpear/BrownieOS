@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <kernel/tty.h>
-#include <kernel/isr.h>
-#include <kernel/pit.h>
-#include <kernel/common.h>
+#include <drivers/tty.h>
+#include <core/isr.h>
+#include <drivers/pit.h>
+#include <core/common.h>
 
 double pit_osc_frequency = 3579545.0 / 3.0;
 uint32_t pit_cur_frequency = 0;

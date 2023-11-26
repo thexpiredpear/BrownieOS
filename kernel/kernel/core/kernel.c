@@ -70,6 +70,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printlogo();
 	kheap_init();
 	init_acpi();
+	init_apic();
 	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
 	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);

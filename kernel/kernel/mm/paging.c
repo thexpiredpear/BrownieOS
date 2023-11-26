@@ -2,12 +2,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <kernel/mm/paging.h>
-#include <kernel/mm/kheap.h>
-#include <kernel/multiboot.h>
-#include <kernel/common.h>
-#include <kernel/idt.h>
-#include <kernel/isr.h>
+#include <mm/paging.h>
+#include <mm/kmm.h>
+#include <core/multiboot.h>
+#include <core/common.h>
+#include <core/idt.h>
+#include <core/isr.h>
 
 uint64_t memory;
 uint32_t* framemap;

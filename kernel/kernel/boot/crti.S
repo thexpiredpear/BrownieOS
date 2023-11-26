@@ -4,7 +4,7 @@
 _init:
 	push %ebp
 	movl %esp, %ebp
-	/* gcc will nicely put the contents of crtbegin.o's .init section here. */
+	# gcc will nicely put the contents of crtbegin.o's .init section here. 
 
 .section .fini
 .global _fini
@@ -12,4 +12,4 @@ _init:
 _fini:
 	push %ebp
 	movl %esp, %ebp
-	/* gcc will nicely put the contents of crtbegin.o's .fini section here. */
+	# gcc will nicely put the contents of crtbegin.o's .fini section here. 

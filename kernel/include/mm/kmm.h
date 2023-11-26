@@ -1,5 +1,5 @@
-#ifndef _KERNEL_KHEAP_H
-#define _KERNEL_KHEAP_H 1
+#ifndef _KERNEL_KMM_H
+#define _KERNEL_KMM_H 1
 
 #define KHEAP_MAGIC_64 0xB10CB10CB10CB10C
 #define KHEAP_MAGIC_32 0xB10CB10C
@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <kernel/common.h>
+#include <core/common.h>
 
 struct heap { 
     uint16_t user;

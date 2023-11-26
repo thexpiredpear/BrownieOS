@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <kernel/isr.h>
-#include <kernel/tty.h>
-#include <kernel/idt.h>
-#include <kernel/common.h>
+#include <core/isr.h>
+#include <drivers/tty.h>
+#include <core/idt.h>
+#include <core/common.h>
 
 isr_t interrupt_handlers[256];
 
@@ -27,11 +27,11 @@ void irq_handler(int_regs_t* registers) {
     } else {
         printf("received interrupt: code %d\n", registers->int_no);
     }
-    // eoi slave
+    // eoi slave pic
     if(registers->int_no >= 40) {
         outb(0xA0, 0x20);
     }
-    // eoi master
+    // eoi master pic
     outb(0x20, 0x20);
     return;
 }

@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <kernel/tty.h>
+#include <drivers/tty.h>
 
 enum vga_color {
 	VGA_COLOR_BLACK = 0,

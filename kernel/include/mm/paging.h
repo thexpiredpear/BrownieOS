@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel/multiboot.h>
-#include <kernel/isr.h>
+#include <core/multiboot.h>
+#include <core/isr.h>
 
 struct page {
     uint32_t present    : 1;   // Present in memory if set
