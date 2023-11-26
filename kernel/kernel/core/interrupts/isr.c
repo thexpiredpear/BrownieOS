@@ -27,11 +27,11 @@ void irq_handler(int_regs_t* registers) {
     } else {
         printf("received interrupt: code %d\n", registers->int_no);
     }
-    // eoi slave
+    // eoi slave pic
     if(registers->int_no >= 40) {
         outb(0xA0, 0x20);
     }
-    // eoi master
+    // eoi master pic
     outb(0x20, 0x20);
     return;
 }

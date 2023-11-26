@@ -95,10 +95,6 @@ void sti() {
    asm volatile("sti");
 }
 
-void cpuid(int cmd, uint32_t *a, uint32_t *d) {
-  asm volatile("cpuid":"=a"(*a),"=d"(*d):"a"(cmd):"ecx","ebx");
-}
-
 void get_msr(uint32_t msr, uint32_t* lo, uint32_t* hi) {
    asm volatile("rdmsr":"=a"(*lo),"=d"(*hi):"c"(msr));
 }

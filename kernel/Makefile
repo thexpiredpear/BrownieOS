@@ -31,20 +31,21 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 kernel/boot/crt0.o \
-kernel/drivers/tty.o \
+kernel/core/kernel.o \
 kernel/core/common.o \
 kernel/core/gdtflush.o \
 kernel/core/gdt.o \
+kernel/core/acpi.o \
 kernel/core/interrupts/idtflush.o \
 kernel/core/interrupts/interrupt.o \
 kernel/core/interrupts/isr.o \
 kernel/core/interrupts/idt.o \
+kernel/core/interrupts/apic.o \
+kernel/drivers/tty.o \
 kernel/drivers/pit.o \
-kernel/core/acpi.o \
-kernel/mm/kheap.o \
+kernel/mm/kmm.o \
 kernel/mm/paging.o \
 kernel/mm/vmm.o \
-kernel/core/kernel.o \
 
 OBJS=\
 kernel/boot/crti.o \
