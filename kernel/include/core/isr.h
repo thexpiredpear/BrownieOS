@@ -17,4 +17,6 @@ void isr_set_handler(uint8_t, isr_t);
 void isr_handler(int_regs_t*);
 void irq_handler(int_regs_t*);
 
+void isr_init();
+
 #endif

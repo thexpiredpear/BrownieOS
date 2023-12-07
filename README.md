@@ -33,10 +33,10 @@ The current build system is messy and runs through pipes of shell scripts, which
     - [x] kmalloc()
 
 - [ ] Multitasking
-    - [ ] APIC
-        - [ ] Parse MADT
-        - [ ] LAPIC
-        - [ ] IOAPIC
+    - [x] APIC
+        - [x] Parse MADT
+        - [x] LAPIC
+        - [x] IOAPIC
     - [ ] HPET
     - [ ] Context Switch
     - [ ] Scheduler
@@ -45,7 +45,11 @@ The current build system is messy and runs through pipes of shell scripts, which
 
 ## Credits
 
-BrownieOS borrows code and takes inspiration from
+BrownieOS borrows code and/or inspiration from the following projects
+
+### GRUB (GRand Unified Bootloader)
+
+<https://www.gnu.org/software/grub/grub.html>
 
 ### OSDev Wiki
 
@@ -54,3 +58,7 @@ BrownieOS borrows code and takes inspiration from
 ### James Molloy's Kernel Development Tutorials
 
 <http://www.jamesmolloy.co.uk/tutorial_html/>
+
+### BRUTAL Operating System
+
+<https://github.com/brutal-org/brutal/>

@@ -36,11 +36,13 @@ kernel/core/common.o \
 kernel/core/gdtflush.o \
 kernel/core/gdt.o \
 kernel/core/acpi.o \
+kernel/core/madt.o \
 kernel/core/interrupts/idtflush.o \
 kernel/core/interrupts/interrupt.o \
 kernel/core/interrupts/isr.o \
 kernel/core/interrupts/idt.o \
 kernel/core/interrupts/apic.o \
+kernel/core/interrupts/ioapic.o \
 kernel/drivers/tty.o \
 kernel/drivers/pit.o \
 kernel/mm/kmm.o \

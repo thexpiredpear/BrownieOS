@@ -307,8 +307,9 @@ void kheap_init() {
     kheap.user = 0;
     kheap.rw = 1;
     kheap.start = (uint32_t)start;
+    printf("kheap start: %x\n", kheap.start);
     kheap.end = (uint32_t)end;
-    kheap.max_addr = 0xFFFFFFFF;
+    kheap.max_addr = 0xFBFFFFFF;
     kheap.header_array = &kheap_header_array;
     kheap.footer_array = &kheap_footer_array;
     kheap.magic = KHEAP_MAGIC_64; 
@@ -324,4 +325,15 @@ void kheap_init() {
 
     insert_ordered_array(&kheap_header_array, (uint32_t)init_header);
     insert_ordered_array(&kheap_footer_array, (uint32_t)init_footer);
+
+    // last page table reserved for physical access
+    page_table_t* table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
+    memset(table, 0, sizeof(page_table_t));
+    kernel_directory->tables[1023] = table;
+    uint32_t phys = v_to_paddr((uint32_t)table);
+    page_dir_entry_t new_dir_entry;
+    new_dir_entry.present = 1;
+    new_dir_entry.rw = 1;
+    new_dir_entry.frame = phys / 0x1000;
+    kernel_directory->page_dir_entries[1023] = new_dir_entry;
 }

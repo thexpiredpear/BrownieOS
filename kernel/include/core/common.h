@@ -28,7 +28,9 @@ uint32_t find_ordered_array(ordered_array_t* ordered_array, uint32_t val);
 // void destroy_ordered_array(ordered_array_t* array);
 
 bool less_predicate(uint32_t a, uint32_t b);
-
+void print_with_leading_zeros(uint32_t len, char* str);
+void trigger_interrupt(uint8_t i);
+void trigger_page_fault();
 void outb(uint16_t port, uint8_t val);
 uint8_t inb(uint16_t port);
 uint16_t inw(uint16_t port);

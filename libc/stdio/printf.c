@@ -58,7 +58,7 @@ char* utoa(unsigned int i, char* str, int base) {
 	return str;
 }
 
-char* ltoa(long i, char* str, long base) {
+char* ltoa(long i, char* str, int base) {
 	char* strptr = str;
 	char* strreverse = str;
 	char* chars = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz";
@@ -87,7 +87,7 @@ char* ltoa(long i, char* str, long base) {
 	return str;
 }
 
-char* ultoa(unsigned long i, char* str, unsigned long base) {
+char* ultoa(unsigned long i, char* str, int base) {
 	char* strptr = str;
 	char* strreverse = str;
 	char* chars = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz";
@@ -112,7 +112,7 @@ char* ultoa(unsigned long i, char* str, unsigned long base) {
 	return str;
 }
 
-char* lltoa(long long i, char* str, long long base) {
+char* lltoa(long long i, char* str, int base) {
 	char* strptr = str;
 	char* strreverse = str;
 	char* chars = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz";
@@ -141,7 +141,7 @@ char* lltoa(long long i, char* str, long long base) {
 	return str;
 }
 
-char* ulltoa(unsigned long long i, char* str, unsigned long long base) {
+char* ulltoa(unsigned long long i, char* str, int base) {
 	char* strptr = str;
 	char* strreverse = str;
 	char* chars = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz";

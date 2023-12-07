@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <mm/kmm.h>
+#include <mm/vmm.h>
 
 // TODO: implement w/ kmalloc
 ordered_array_t init_ordered_array(uint32_t max_size) {
@@ -64,11 +66,31 @@ uint32_t find_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
    return 0xFFFFFFFF;
 }
 
-// TODO: implement w/ kfree
-// void destroy_ordered_array(ordered_array_t* ordered_array) {}
+void destroy_ordered_array(ordered_array_t* ordered_array) {
+   kfree(ordered_array->array);
+}
+
+void print_with_leading_zeros(uint32_t len, char* str) {
+   uint32_t str_len = strlen(str);
+   for(uint32_t i = 0; i < len - str_len; i++) {
+      printf("0");
+   }
+   printf(str);
+   printf("\n");
+}
 
 bool less_predicate(uint32_t a, uint32_t b) {
    return a < b ? true : false;
+}
+
+void trigger_interrupt(uint8_t i) {
+   // asm volatile("int %0" : : "i"(i));
+   i++;
+}
+
+void trigger_page_fault() {
+   uint32_t fault = *((uint32_t*)0x0);
+   fault++;
 }
 
 void outb(uint16_t port, uint8_t value) {
@@ -104,8 +126,7 @@ void set_msr(uint32_t msr, uint32_t lo, uint32_t hi) {
 }
 
 __attribute__((noreturn)) 
-void panic(char* message)
-{
+void panic(char* message) {
    printf("kernel panic: ");
    printf(message);
    asm volatile("cli");
