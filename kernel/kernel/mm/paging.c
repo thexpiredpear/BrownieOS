@@ -32,7 +32,7 @@ void page_fault(int_regs_t* registers) {
     printf("write: %d\n", write);
     printf("user: %d\n", user);
     printf("reserved: %d\n", reserved);
-    return;
+    panic("page fault");
 }
 
 // set frame as used

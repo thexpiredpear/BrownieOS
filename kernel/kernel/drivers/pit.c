@@ -7,17 +7,20 @@
 
 double pit_osc_frequency = 3579545.0 / 3.0;
 uint32_t pit_cur_frequency = 0;
-uint32_t tick = 0;
+uint64_t tick = 0;
 
 void pit_handler(int_regs_t* registers) {
     tick++;
+    if(tick % pit_cur_frequency == 0) {
+        printf("tick\n");
+    }
     return;
 }
 
 void pit_init(uint32_t freq) {
     cli();
     pit_cur_frequency = freq;
-    isr_set_handler(32, &pit_handler);
+    isr_set_handler(32, pit_handler);
     uint32_t divisor = (uint32_t)(pit_osc_frequency / (double)freq);
     // BCD/Binary mode: 16 bit
     // Operating mode: square wave generator

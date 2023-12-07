@@ -27,8 +27,6 @@
 .extern isr_handler
 
 isr_common_handler:
-    nop
-
     pushal
 
     # PUSH STACK POINTER TO ACCESS REGISTERS
@@ -56,8 +54,6 @@ isr_common_handler:
 .extern irq_handler
 
 irq_common_handler:
-    nop
-
     pushal
 
     # PUSH STACK POINTER TO ACCESS REGISTERS
