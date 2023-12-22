@@ -15,6 +15,7 @@
 #include <mm/kmm.h>
 #include <mm/paging.h>
 #include <mm/vmm.h>
+#include <drivers/hpet.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"
@@ -93,6 +94,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
-	pit_init(50);
+	// pit_init(50);
+	init_hpet();
 	kpause();
 }
