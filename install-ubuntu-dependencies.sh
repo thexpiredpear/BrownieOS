@@ -2,7 +2,7 @@
 # ONLY TESTED ON UBUNTU 22.04.3 LTS
 # GCC AND BINUTILS VERSIONS CONFIRMED COMPATIBLE, UPDATE IF YOU LIKE
 # gcc dependencies
-sudo apt install build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev
+sudo apt install build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo libisl-dev qemu-system-i386 xorriso grub-pc-bin
 # create dir to build cross compiler
 cd ~
 mkdir build-cross

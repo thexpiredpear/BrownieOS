@@ -55,6 +55,7 @@ typedef struct xsdt xsdt_t;
 // 56 bytes
 struct hpet {
     acpi_sdt_header_t header;
+    uint8_t hardware_rev_id;
     uint8_t comparator_count:5;
     uint8_t counter_size:1;
     uint8_t reserved_bit:1;
