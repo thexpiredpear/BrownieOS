@@ -12,7 +12,8 @@
 #include <mm/kmm.h>
 
 uint32_t clk_per = 0;
-uint32_t freq = 0;
+uint32_t main_cnt_freq = 0;
+uint32_t int_per = 0;
 
 void init_hpet() {
     hpet_t* hpet = get_hpet();
@@ -22,11 +23,13 @@ void init_hpet() {
     if(hpet->address_space_id != 0) {
         panic("UNSUPPORTED HPET ADDRESS SPACE ID");
     }
-    void* hpet_addr = access_paddr_DANGER((void*)(hpet->addr & 0xFFFFFFFF));
+    void* hpet_addr = access_paddr_DANGER((hpet->addr & 0xFFFFFFFF));
     volatile uint64_t* gen_cap = (volatile uint64_t*)hpet_addr;
     volatile uint64_t* gen_conf = (volatile uint64_t*)(hpet_addr + 0x10);
     volatile uint64_t* main_cnt = (volatile uint64_t*)(hpet_addr + 0xF0);
     volatile uint64_t* tim_n_conf_base = (volatile uint64_t*)(hpet_addr + 0x100);
+    volatile uint64_t* tim_n_comp_base = (volatile uint64_t*)(hpet_addr + 0x108);
+    volatile uint32_t* gen_int_sts = (volatile uint32_t*)(hpet_addr + 0x20);
     clk_per = (uint32_t)((*gen_cap >> 32) & 0xFFFFFFFF);
     uint16_t ven_id = (uint16_t)((*gen_cap >> 16) & 0xFFFF);
     uint8_t leg_cap = (uint8_t)((*gen_cap >> 15) & 0x1);
@@ -36,8 +39,8 @@ void init_hpet() {
     printf("CLK_PER: 0x%x | VEN_ID: 0x%x | LEG_CAP: %i | CNT_CAP: %i | NUM_TIM: %i | REV_ID: %i\n\n", clk_per, ven_id, leg_cap, cnt_cap, num_tim, rev_id);
     *gen_conf &= ~((uint64_t)0b11);
     *main_cnt = 0;
-    uint64_t tim_n_disable_mask = ~((0b11111 << 9) | (1 << 2) | (1 << 3) | (1 << 6) | (1 << 6));
-    uint64_t tim_n_enable_mask = (0b10 << 9) | (1 << 2) | (1 << 3) | (1 << 6);
+    uint64_t tim_n_disable_mask = ~((uint64_t)(0b11111 << 9) | (1 << 2) | (1 << 3) | (1 << 6));
+    uint64_t tim_n_enable_mask = (0b00010 << 9) | (1 << 2) | (1 << 3) | (1 << 6);
     for(uint8_t i = 0; i < num_tim; i++) {
         bool flag = false;
         printf("---- TIMER %i ----\n", i);
@@ -63,8 +66,21 @@ void init_hpet() {
         *tim_n_conf &= tim_n_disable_mask;
         printf("%x\n", tim_n_disable_mask);    
     }
-    freq = (uint32_t)(1000000000000000 / clk_per);
-    printf("HPET FREQUENCY: %i\n", freq);
-    *gen_conf |= 0x1;
+    main_cnt_freq = (uint32_t)(1000000000000000 / clk_per);
+    printf("HPET FREQUENCY: %i\n", main_cnt_freq);
+    int_per = main_cnt_freq;
+    printf("INT PERIOD: %i\n", int_per);
     *tim_n_conf_base |= tim_n_enable_mask;
+    *tim_n_comp_base = int_per;
+    *gen_conf |= 0b1;
+    /*
+    *gen_int_sts = 1;
+    while(true) {
+        printf("%i", *gen_int_sts & 0x1);
+        if(*gen_int_sts & 0x1 == 1) {
+            printf("high\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        }
+        *gen_int_sts = 1;
+    }
+    */
 }

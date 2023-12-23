@@ -198,7 +198,7 @@ int vprintf(const char* restrict format, va_list parameters) {
 								case 'd': {
 									format++;
 									long long i = va_arg(parameters, long long);
-									char str[21];
+									char str[65];
 									lltoa(i, str, 10);
 									size_t len = strlen(str);
 									if (remaining < len) {
@@ -213,10 +213,11 @@ int vprintf(const char* restrict format, va_list parameters) {
 									}
 									break;
 								}
-								case 'u': {
+								case 'u':
+								case 'i': {
 									format++;
 									unsigned long long i = va_arg(parameters, unsigned long long);
-									char str[21];
+									char str[65];
 									ulltoa(i, str, 10);
 									size_t len = strlen(str);
 									if (remaining < len) {
@@ -234,7 +235,7 @@ int vprintf(const char* restrict format, va_list parameters) {
 								case 'x': {
 									format++;
 									unsigned long long i = va_arg(parameters, unsigned long long);
-									char str[17];
+									char str[65];
 									ulltoa(i, str, 16);
 									size_t len = strlen(str);
 									if (remaining < len) {
@@ -253,7 +254,8 @@ int vprintf(const char* restrict format, va_list parameters) {
 							break;
 						}
 						break;
-					}	
+					}
+					break;
 				}
 				case 'c': {
 					format++;
@@ -300,6 +302,7 @@ int vprintf(const char* restrict format, va_list parameters) {
 					}
 					break;
 				}
+				case 'u':
 				case 'i': {
 					format++;
 					const int i = va_arg(parameters, const int);
