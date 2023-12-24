@@ -78,7 +78,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	parse_madt();
 	init_apic();
 	init_ioapic();	
-	
+	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
 	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
 	printf("\nkmalloc: %x\n", max_is_a_nerd_a);
@@ -89,12 +89,12 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	print_kheap();
 	printf("\nkfree: %x\n\n", max_is_a_nerd_b);
 	kfree((void*)max_is_a_nerd_b);
-	
+	*/
 	//print_kheap();
 	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
-	// pit_init(50);
-	init_hpet();
+	pit_init(50);
+	// init_hpet();
 	kpause();
 }

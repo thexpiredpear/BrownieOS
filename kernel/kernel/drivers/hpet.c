@@ -40,7 +40,8 @@ void init_hpet() {
     *gen_conf &= ~((uint64_t)0b11);
     *main_cnt = 0;
     uint64_t tim_n_disable_mask = ~((uint64_t)(0b11111 << 9) | (1 << 2) | (1 << 3) | (1 << 6));
-    uint64_t tim_n_enable_mask = (0b00010 << 9) | (1 << 2) | (1 << 3) | (1 << 6);
+    // uint64_t tim_n_enable_mask = (0b00010 << 9) | (1 << 2) | (1 << 3) | (1 << 6);
+    uint64_t tim_n_enable_mask = (0b00010 << 9) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 6);
     for(uint8_t i = 0; i < num_tim; i++) {
         bool flag = false;
         printf("---- TIMER %i ----\n", i);
@@ -56,8 +57,9 @@ void init_hpet() {
             printf("TIMER NOT PERIODIC CAPABLE\n");
             flag = true;
         }
-        if((cap_apic >> 2) & 0x1 != 1) {
+        if(((cap_apic >> 2) & 0x1) != 1) {
             printf("TIMER NOT IRQ2 CAPABLE\n");
+            flag = true;
         }
         if(flag) {
             panic("TIMER SETUP FAILED");
@@ -67,20 +69,35 @@ void init_hpet() {
         printf("%x\n", tim_n_disable_mask);    
     }
     main_cnt_freq = (uint32_t)(1000000000000000 / clk_per);
-    printf("HPET FREQUENCY: %i\n", main_cnt_freq);
+    printf("HPET TICK FREQUENCY (hz): %i\n", main_cnt_freq);
     int_per = main_cnt_freq;
-    printf("INT PERIOD: %i\n", int_per);
+    printf("INT PERIOD (ticks): %i\n", int_per);
     *tim_n_conf_base |= tim_n_enable_mask;
+    printf("%i\n",(*tim_n_conf_base >> 9) & 0x1F);
     *tim_n_comp_base = int_per;
     *gen_conf |= 0b1;
+    uint64_t threshold = 0;
+    /*
+    while(true) {
+        // printf("%i || ", *main_cnt);
+        // printf("%i\n", *tim_n_comp_base);
+        if(*tim_n_comp_base != threshold) {
+            threshold = *tim_n_comp_base;
+            printf("SHOULD BE AN INTERRUPT\n");
+        }
+        if((*gen_int_sts & 0x1) == 1) {
+            printf("high");
+            *gen_int_sts = 1;
+        }
+    }
+    */
     /*
     *gen_int_sts = 1;
     while(true) {
-        printf("%i", *gen_int_sts & 0x1);
         if(*gen_int_sts & 0x1 == 1) {
             printf("high\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+            *gen_int_sts = 1;
         }
-        *gen_int_sts = 1;
     }
     */
 }
