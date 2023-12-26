@@ -37,7 +37,8 @@ The current build system is messy and runs through pipes of shell scripts, which
         - [x] Parse MADT
         - [x] LAPIC
         - [x] IOAPIC
-    - [ ] HPET
+    - [x] HPET
+    - [ ] LAPIC Timer (?)
     - [ ] Context Switch
     - [ ] Scheduler
 
