@@ -7,6 +7,7 @@
 #include <core/acpi.h>
 #include <core/multiboot.h>
 #include <core/common.h>
+#include <core/ioapic.h>
 #include <mm/vmm.h>
 #include <mm/kmm.h>
 
@@ -51,4 +52,7 @@ void init_apic() {
     get_msr(IA32_APIC_BASE_MSR, &lo, &hi);
     lo |= (1 << 11);
     set_msr(IA32_APIC_BASE_MSR, lo, hi);
+    init_ioapic();
+    cli();
+	sti();
 }   

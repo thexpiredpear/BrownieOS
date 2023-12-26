@@ -77,7 +77,6 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	init_acpi();
 	parse_madt();
 	init_apic();
-	init_ioapic();	
 	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
 	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
@@ -94,7 +93,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
-	pit_init(50);
-	// init_hpet();
+	//pit_init(50);
+	init_hpet(10000);
 	kpause();
 }

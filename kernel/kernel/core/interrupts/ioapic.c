@@ -32,7 +32,7 @@ uint32_t read_ioapic(uint32_t reg) {
 }
 
 void init_ioapic() {
-    ioapic = access_paddr_DANGER((uint32_t)get_ioapic_addr());
+    ioapic = (uint32_t)access_paddr_DANGER((uint32_t)get_ioapic_addr());
     gsi_entries = get_iso_entries();
     printf("phys addr: %x\n", get_ioapic_addr());
     ioapic_ver = read_ioapic(IOAPIC_VER_REG) & 0xFF;
@@ -66,6 +66,7 @@ void init_ioapic() {
         hi = read_ioapic(hi_idx);
         entry_lo = *(redir_entry_lo_t*)&lo;
         entry_hi = *(redir_entry_hi_t*)&hi;
+        int j = i;
     }
     printf("IOAPIC: addr 0x%x, ioapic ver %d, max redir entries %d\n", ioapic, ioapic_ver, max_redir_entries);
 }
