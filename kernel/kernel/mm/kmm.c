@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 #include <core/common.h>
 #include <mm/kmm.h>
 #include <mm/paging.h>

@@ -94,7 +94,6 @@ void free_pages(void* addr, size_t pages) {
 }
 
 void* access_paddr_DANGER(uint32_t paddr) {
-    uint32_t first_null_table;
     // find a free kernel space page
     page_table_t* table = kernel_directory->tables[1023];
     for(int i = 0; i < 1024; i++) {
