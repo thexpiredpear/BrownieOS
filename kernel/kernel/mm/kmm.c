@@ -226,12 +226,12 @@ void* alloc(heap_t* heap, size_t size) {
     for(uint32_t i = 0; i < header_array->size; i++) {
         header_t* header = (header_t*)get_ordered_array(header_array, i);
         footer_t* footer = (footer_t*)get_ordered_array(footer_array, i);
-        if(!kmm_checks(header, footer)) {
-            // corrupted, fix 
-            continue;
-        }
         // if block used or too small, continue
         if(header->used != 0 || header->size < size) {
+            continue;
+        }
+        if(!kmm_checks(header, footer)) {
+            // TODO: corrupted, fix 
             continue;
         }
         // suitable block found; header & footer valid
@@ -243,19 +243,19 @@ void* alloc(heap_t* heap, size_t size) {
     
     // no suitable block found; allocate new block via vmm
     uint32_t bytes = size + sizeof(header_t) + sizeof(footer_t);
-    uint32_t pages = bytes / 0x1000;
+    uint32_t pages = bytes / PAGE_SIZE;
     // round to higher page
-    if(bytes % 0x1000 != 0) {
+    if(bytes % PAGE_SIZE != 0) {
         pages++;
     }
     // check if available heap space
-    if(heap->end + (pages * 0x1000) > heap->max_addr) {
+    if(heap->end + (pages * PAGE_SIZE) > heap->max_addr) {
         printf("heap full\n");
         return NULL;
     }
     // allocate pages
     uint32_t start = (uint32_t)kalloc_pages(pages);
-    uint32_t end = start + (pages * 0x1000);
+    uint32_t end = start + (pages * PAGE_SIZE);
     heap->end = end;
     // create header and footer for new block
     header_t* header = (header_t*)start;
@@ -302,15 +302,14 @@ void kheap_init() {
     kheap_header_array = init_ordered_array_place((void*)(&header_ptr_array), 0x400);
     kheap_footer_array = init_ordered_array_place((void*)(&footer_ptr_array), 0x400);
     uint32_t start = (uint32_t)kalloc_pages(1024);
-    uint32_t end = start + (1024 * 0x1000);
+    uint32_t end = start + (1024 * PAGE_SIZE);
     header_t* init_header = (header_t*)start;
     footer_t* init_footer = (footer_t*)(end - sizeof(footer_t));
     kheap.user = 0;
     kheap.rw = 1;
-    kheap.start = (uint32_t)start;
-    printf("kheap start: %x\n", kheap.start);
-    kheap.end = (uint32_t)end;
-    kheap.max_addr = 0xFBFFFFFF;
+    kheap.start = start;
+    kheap.end = end;
+    kheap.max_addr = KHEAP_END;
     kheap.header_array = &kheap_header_array;
     kheap.footer_array = &kheap_footer_array;
     kheap.magic = KHEAP_MAGIC_64; 
@@ -326,15 +325,4 @@ void kheap_init() {
 
     insert_ordered_array(&kheap_header_array, (uint32_t)init_header);
     insert_ordered_array(&kheap_footer_array, (uint32_t)init_footer);
-
-    // last page table reserved for physical access
-    page_table_t* table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
-    memset(table, 0, sizeof(page_table_t));
-    kernel_directory->tables[1023] = table;
-    uint32_t phys = v_to_paddr((uint32_t)table);
-    page_dir_entry_t new_dir_entry;
-    new_dir_entry.present = 1;
-    new_dir_entry.rw = 1;
-    new_dir_entry.frame = phys / 0x1000;
-    kernel_directory->page_dir_entries[1023] = new_dir_entry;
 }

@@ -17,65 +17,40 @@ void* kalloc_pages(size_t pages) {
         return NULL;
     }
     // start in kernel space
-    for(int i = 768; i < 1023; i++) {
+    for(uint32_t i = 768; i < 1023; i++) {
         page_table_t* table = kernel_directory->tables[i];
-        if((uint32_t)table != 0) {
-            for(int j = 0; j < 1024; j++) {
-                page_t page = table->pages[j];
-                // monstrosity to bitmask page, access as uint32_t
-                if(*(uint32_t*)&page == 0) {
-                    if(++contig == 1) {
-                        start = (void*)(i * 0x400000 + j * 0x1000);
-                    } 
-                    if(contig == pages) {
-                        break;
-                    }   
-                } else {
-                    contig = 0;
-                    start = NULL;
-                }
-            }
-        } else {
-            contig += 1024;
-            if(start == NULL) {
-                start = (void*)(i * 0x400000);
-            }
-            if(contig >= pages) {
-                contig = pages;
-                break;
+        for(uint32_t j = 0; j < 1024; j++) {
+            page_t page = table->pages[j];
+            if(*(uint32_t*)&page == 0) {
+                if(++contig == 1) {
+                    start = (void*)PAGE_IDX_VADDR(i, j, 0);
+                } 
+                if(contig == pages) {
+                    break;
+                }   
+            } else {
+                contig = 0;
+                start = NULL;
             }
         }
+        if(contig == pages) {
+            break;
+        }
     }
-    if(start == NULL) {
-        panic("no free kernel space");
+    if((start == NULL) || (contig != pages)) {
+        panic("not enough free kernel space");
     }
     void* pos = start;
     int cur_table = 0;
     int cur_page = 0;
     while(contig) {
-        cur_table = (uint32_t)((uint32_t)pos / 0x400000);
-        cur_page = (uint32_t)(((uint32_t)pos % 0x400000) / 0x1000);
-        if((uint32_t)kernel_directory->tables[cur_table] != 0) {
-            // page table exists
-            if(!kernel_directory->tables[cur_table]->pages[cur_page].frame) {
-                alloc_frame(
-                &(kernel_directory->tables[cur_table]->pages[cur_page]),
-                false, true);
-            }
-            pos += 0x1000;
-            contig--;
-        } else {
-            // page table does not exist
-            page_table_t* table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
-            memset(table, 0, sizeof(page_table_t));
-            kernel_directory->tables[cur_table] = table;
-            uint32_t phys = v_to_paddr((uint32_t)table);
-            page_dir_entry_t new_dir_entry;
-            new_dir_entry.present = 1;
-            new_dir_entry.rw = 1;
-            new_dir_entry.frame = phys / 0x1000;
-            kernel_directory->page_dir_entries[cur_table] = new_dir_entry;
-        }
+        cur_table = (uint32_t)(PAGE_DIR_IDX(pos));
+        cur_page = (uint32_t)(PAGE_TBL_IDX(pos));
+        alloc_frame(
+            &(kernel_directory->tables[cur_table]->pages[cur_page]),
+            false, true);
+        pos += PAGE_SIZE;
+        contig--;
     }
     return start;
 }
@@ -83,12 +58,12 @@ void* kalloc_pages(size_t pages) {
 void free_pages(void* addr, size_t pages) {
     // TODO: free page tables if fully empty
     uint32_t start = (uint32_t)addr;
-    uint32_t end = start + (pages * 0x1000);
+    uint32_t end = start + (pages * PAGE_SIZE);
     uint32_t table;
     uint32_t page;
-    for(uint32_t pos = start; pos < end; pos += 0x1000) {
-        table = pos / 0x400000;
-        page = (pos % 0x400000) / 0x1000;
+    for(uint32_t pos = start; pos < end; pos += PAGE_SIZE) {
+        table = PAGE_DIR_IDX(pos);
+        page = PAGE_TBL_IDX(pos);
         free_frame(&current_directory->tables[table]->pages[page]);
     }
 }
@@ -102,16 +77,16 @@ void* access_paddr_DANGER(uint32_t paddr) {
             page->present = 1;
             page->rw = 1;
             page->user = 0;
-            page->frame = paddr / 0x1000;
-            return (void*)(0xFFC00000 + (i * 0x1000) + (paddr % 0x1000));
+            page->frame = paddr / PAGE_SIZE;
+            return (void*)(0xFFC00000 + (i * PAGE_SIZE) + (paddr % PAGE_SIZE));
         }
     }
     return NULL;
 }
 
 void clraccess_paddr_DANGER(void* vaddr) {
-    page_table_t* table = kernel_directory->tables[(uint32_t)vaddr / 0x400000];
-    page_t* page = &(table->pages[((uint32_t)vaddr % 0x400000) / 0x1000]);
+    page_table_t* table = kernel_directory->tables[PAGE_DIR_IDX(vaddr)];
+    page_t* page = &(table->pages[PAGE_TBL_IDX(vaddr)]);
     *(uint32_t*)page = 0;
     return;
 }

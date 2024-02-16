@@ -1,13 +1,28 @@
 #ifndef _KERNEL_KMM_H
 #define _KERNEL_KMM_H 1
 
-#define KHEAP_MAGIC_64 0xB10CB10CB10CB10C
-#define KHEAP_MAGIC_32 0xB10CB10C
-
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <core/common.h>
+#include <mm/paging.h>
+
+#define KHEAP_MAGIC_64 0xB10CB10CB10CB10C
+#define KHEAP_MAGIC_32 0xB10CB10C
+#define PHYS_MAPPING_SPACE 0x400000
+#define KERN_END 0xFFFFFFFF
+#define PAGE_STRUCT_END (KERN_END - PHYS_MAPPING_SPACE)
+// 0xFFBFFFFF
+#define PHYS_MAPPING_START (PAGE_STRUCT_END + 1)
+// 0xFFC00000
+#define KHEAP_END (PAGE_STRUCT_END - (65 * 1024 * PAGE_TABLE_SIZE))
+// 0xEF7FFFFF
+#define PAGE_STRUCT_START (KHEAP_END + 1)
+// 0xEF800000
+// 64*4MiB for process page tables, 1*4MiB for process page dirs
+// | 0x0 | 0xC0000000 | 0xC0400000 | 0xEF800000 | 0xFFC00000 | EOM
+// | USR | KPROG      | KHEAP      | PAGESTRUCT | PHYSMAP    | EOM
+// | 3GB | 4MB        | 756MB      | 260MB      | 4MB        | 4GB      
 
 struct heap { 
     uint16_t user;
