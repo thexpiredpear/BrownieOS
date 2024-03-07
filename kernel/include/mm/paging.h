@@ -34,9 +34,13 @@ struct page {
     uint32_t present    : 1;   // Present in memory if set
     uint32_t rw         : 1;   // Readwrite if set
     uint32_t user       : 1;   // User mode if set
+    uint32_t write_thru : 1;   // Write through cache if set
+    uint32_t disable_cache : 1;   // Disable cache if set
     uint32_t accessed   : 1;   // Has the page been accessed since last refresh?
     uint32_t dirty      : 1;   // Has the page been written to since last refresh?
-    uint32_t unused     : 7;   // Unused / reserved bits
+    uint32_t page_attr  : 1;   // Page attribute 
+    uint32_t global     : 1;   // Global page if set
+    uint32_t unused     : 3;   // Unused / reserved bits
     uint32_t frame      : 20;  // Frame address (shifted right 12 bits)
 } __attribute__((packed));
 

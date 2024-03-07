@@ -125,6 +125,11 @@ void set_msr(uint32_t msr, uint32_t lo, uint32_t hi) {
    asm volatile("wrmsr"::"a"(lo),"d"(hi),"c"(msr));
 }
 
+uint32_t atomic_xchg(uint32_t val) {
+   asm volatile("xchg %0, %1" : "+r"(val) : "m"(val));
+   return val;
+}
+
 __attribute__((noreturn)) 
 void panic(char* message) {
    printf("kernel panic: ");

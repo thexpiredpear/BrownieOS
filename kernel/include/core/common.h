@@ -36,6 +36,7 @@ uint8_t inb(uint16_t port);
 uint16_t inw(uint16_t port);
 void cli();
 void sti();
+uint32_t atomic_xchg(uint32_t val);
 void get_msr(uint32_t msr, uint32_t* lo, uint32_t* hi);
 void set_msr(uint32_t msr, uint32_t lo, uint32_t hi);
 void panic(char* message);

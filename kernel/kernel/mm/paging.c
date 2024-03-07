@@ -101,13 +101,7 @@ void free_frame(page_t* page) {
         return;
     }
     clear_frame(frame * PAGE_SIZE);
-    page->present = 0;
-    page->rw = 0;
-    page->user = 0;
-    page->accessed = 0;
-    page->dirty = 0;
-    page->unused = 0;
-    page->frame = 0;
+    *((uint32_t*)(page)) = 0;
 }
 
 void swap_dir(page_directory_t* dir) {

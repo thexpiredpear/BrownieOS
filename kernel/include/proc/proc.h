@@ -7,6 +7,9 @@
 
 #define MAXPROC 64
 
+spinlock_t pid_lock;
+uint32_t pid_counter = 0;
+
 struct context {
     uint32_t esp;
     uint32_t ebp;
@@ -35,4 +38,5 @@ struct proc {
     procstate_t procstate;
 }
 
+uint32_t pid_inc();
 void copy_page_dir_cow(page_directory_t* src, page_directory_t* dest);
