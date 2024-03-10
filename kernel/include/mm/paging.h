@@ -63,7 +63,7 @@ typedef struct page_dir_entry page_dir_entry_t;
 
 struct page_table {
     page_t pages[1024];
-} __attribute__((packed));
+} __attribute__((packed)) __attribute__((aligned(0x1000)));
 
 typedef struct page_table page_table_t;
 
@@ -72,7 +72,7 @@ struct page_directory {
     page_dir_entry_t page_dir_entries[1024]; // dir entries, physical table addresses for paging
     page_table_t* tables[1024]; // virtual addresses for r/w access to tables - NO PARAMS
     uint32_t directory_paddr; // physical address for paging
-} __attribute__((packed));
+} __attribute__((packed)) __attribute__((aligned(0x1000)));
 
 typedef struct page_directory page_directory_t;
 

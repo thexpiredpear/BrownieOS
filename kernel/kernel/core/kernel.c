@@ -66,7 +66,6 @@ void kpause() {
 }
 
 void kmain(multiboot_info_t* mbd, uint32_t magic) {
-	terminal_initialize();
 	gdt_init();
 	idt_init();
 	paging_init(mbd, magic);
@@ -77,6 +76,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	init_acpi();
 	parse_madt();
 	init_apic();
+	printsyms();
 	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
 	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
