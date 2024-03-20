@@ -26,15 +26,15 @@ void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
     uint32_t addr;
     asm volatile("mov %%cr2, %0" : "=r" (addr));
-    bool present = registers->err_code & PAGE_FAULT_PRESENT_A;
-    bool write = registers->err_code & PAGE_FAULT_WRITE_A;
-    bool user = registers->err_code & PAGE_FAULT_USER_A;
-    bool reserved = registers->err_code & PAGE_FAULT_RESERVED_A;
+    char* present = (registers->err_code & PAGE_FAULT_PRESENT_A) ? "true" : "false";
+    char* write = (registers->err_code & PAGE_FAULT_WRITE_A) ? "true" : "false";
+    char* user = (registers->err_code & PAGE_FAULT_USER_A) ? "true" : "false";
+    char* reserved = (registers->err_code & PAGE_FAULT_RESERVED_A) ? "true" : "false";
     printf("addr: %x\n", addr);
-    printf("present: %d\n", present);
-    printf("write: %d\n", write);
-    printf("user: %d\n", user);
-    printf("reserved: %d\n", reserved);
+    printf("present: %s\n", present);   
+    printf("write: %s\n", write);
+    printf("user: %s\n", user);
+    printf("reserved: %s\n", reserved);
     panic("page fault");
 } __attribute__((noreturn));
 
@@ -182,28 +182,8 @@ void reserve_mem_map(multiboot_info_t* mbd) {
     }
 }
 
-void cp_boot_dir(uint32_t start_tbl, uint32_t end_tbl) {
-    for(int i = start_tbl; i <= end_tbl; i++) {
-        uint32_t dir_entry = (uint32_t)boot_page_directory[i];
-        page_table_t* new_page_table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
-        if(dir_entry) {
-            page_table_t* boot_page_table = (page_table_t*)((dir_entry & 0xFFFFF000)+0xC0000000);
-            for(int j = 0; j < 1024; j++) {
-                new_page_table->pages[j] = boot_page_table->pages[j];
-            }
-        }
-        uint32_t new_page_table_paddr = (uint32_t)(new_page_table) - 0xC0000000;
-        page_dir_entry_t new_dir_entry;
-        new_dir_entry.present = 1;
-        new_dir_entry.rw = 1;
-        new_dir_entry.frame = new_page_table_paddr / PAGE_SIZE;
-        kernel_directory->page_dir_entries[i] = new_dir_entry;
-        kernel_directory->tables[i] = (page_table_t*)new_page_table;
-    }
-}
-
 void setup_kernel_directory() {
-    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
+    kernel_directory->directory_paddr = KV2P((uint32_t)kernel_directory);
     page_table_t* cur_table;
     for(int i = 768; i < 1023; i++) {
         cur_table = &kernel_page_table[i - KERN_START_PAGE];
@@ -211,7 +191,7 @@ void setup_kernel_directory() {
         kernel_directory->page_dir_entries[i].present = 1;
         kernel_directory->page_dir_entries[i].rw = 1;
         kernel_directory->page_dir_entries[i].frame = 
-            ((uint32_t)&kernel_page_table[i - KERN_START_PAGE] - 0xC0000000) >> 12;
+             KV2P((uint32_t)cur_table) >> 12;
         for(int j = 0; j < 1024; j++) {
             cur_table->pages[j].present = 1;
             cur_table->pages[j].rw = 1;
@@ -223,7 +203,7 @@ void setup_kernel_directory() {
     kernel_directory->page_dir_entries[1023].present = 1;
     kernel_directory->page_dir_entries[1023].rw = 1;
     kernel_directory->page_dir_entries[1023].frame = 
-        ((uint32_t)&kernel_page_table[255] - 0xC0000000) >> 12;
+        KV2P((uint32_t)&kernel_page_table[255]) >> 12;
 }
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
@@ -246,8 +226,7 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     swap_dir(kernel_directory);
     current_directory = kernel_directory;  
     terminal_initialize();
-    reserve_mem_map(mbd); 
-    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
+    reserve_mem_map(mbd);
     // Reserve first    GiB of memory for system/kernel wmmaloc 
     // TODO: only reserve first 4MiB automatically and base rest on mmap
     for(int addr = 0; addr < 0x10000000; addr += PAGE_SIZE) {

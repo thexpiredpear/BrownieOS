@@ -30,6 +30,9 @@
 
 #define PAGE_IDX_VADDR(d, t, o) ((d * 0x400000) + (t * 0x1000) + o)
 
+#define KP2V(x) (x + 0xC0000000)
+#define KV2P(x) (x - 0xC0000000)
+
 struct page {
     uint32_t present    : 1;   // Present in memory if set
     uint32_t rw         : 1;   // Readwrite if set
