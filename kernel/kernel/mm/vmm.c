@@ -78,7 +78,7 @@ void* access_paddr_DANGER(uint32_t paddr) {
             page->rw = 1;
             page->user = 0;
             page->frame = paddr / PAGE_SIZE;
-            return (void*)(0xFFC00000 + (i * PAGE_SIZE) + (paddr % PAGE_SIZE));
+            return (void*)(PADDR_ACCESS_START_ADDR + (i * PAGE_SIZE) + (paddr % PAGE_SIZE));
         }
     }
     return NULL;

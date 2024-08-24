@@ -185,6 +185,7 @@ void reserve_mem_map(multiboot_info_t* mbd) {
 void setup_kernel_directory() {
     kernel_directory->directory_paddr = KV2P((uint32_t)kernel_directory);
     page_table_t* cur_table;
+    // map all kernel space pages
     for(int i = 768; i < 1023; i++) {
         cur_table = &kernel_page_table[i - KERN_START_PAGE];
         kernel_directory->tables[i] = cur_table;
@@ -204,6 +205,10 @@ void setup_kernel_directory() {
     kernel_directory->page_dir_entries[1023].rw = 1;
     kernel_directory->page_dir_entries[1023].frame = 
         KV2P((uint32_t)&kernel_page_table[255]) >> 12;
+    // reflect GiB identity mapping in physical page framemap
+    for(int addr = 0; addr < 0x10000000; addr += PAGE_SIZE) {
+        set_frame(addr);
+    }
 }
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
@@ -227,9 +232,4 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     current_directory = kernel_directory;  
     terminal_initialize();
     reserve_mem_map(mbd);
-    // Reserve first    GiB of memory for system/kernel wmmaloc 
-    // TODO: only reserve first 4MiB automatically and base rest on mmap
-    for(int addr = 0; addr < 0x10000000; addr += PAGE_SIZE) {
-        set_frame(addr);
-    }
 }       
