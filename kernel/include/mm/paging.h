@@ -9,29 +9,34 @@
 #define PAGE_SIZE 0x1000
 #define PAGE_TABLE_SIZE 0x1000
 #define EOM 0xFFFFFFFF
-#define KERN_START_PAGE 768
+#define KERN_START_PAGE_TBL 768
+#define KERN_START 0xC0000000
+#define KERN_HIGHMEM_START_PAGE_TBL 992
+#define KERN_HIGHMEM_START 0xF8000000
 
 #define PAGE_FAULT_PRESENT_A 0b1
 #define PAGE_FAULT_WRITE_A 0b10
 #define PAGE_FAULT_USER_A 0b100
 #define PAGE_FAULT_RESERVED_A 0b1000
 
-#define PAGE_FRAME(x) (x / 0x1000)
+#define PAGE_FRAME(x) (x / PAGE_SIZE)
+#define PAGE_ADDR(x) (x * PAGE_SIZE)
+
 #define PAGE_FRAME_BITMAP_IDX(x) (x / 32)
 #define PAGE_FRAME_BITMAP_OFF(x) (x % 32)
 
-#define PAGE_ADDR(x) (x * 0x1000)
-
 #define PAGE_ROUND_DOWN(x) (x & 0xFFFFF000);
-#define PAGE_ROUND_UP(x) ((x % 0x1000) ? ((x & 0xFFFFF000) + 0x1000) : x)
+#define PAGE_ROUND_UP(x) ((x % PAGE_SIZE) ? ((x & 0xFFFFF000) + PAGE_SIZE) : x)
 
 #define PAGE_DIR_IDX(x) ((uint32_t)x / 0x400000)
-#define PAGE_TBL_IDX(x) (((uint32_t)x % 0x400000) / 0x1000)
+#define PAGE_TBL_IDX(x) (((uint32_t)x % 0x400000) / PAGE_SIZE)
 
 #define PAGE_IDX_VADDR(d, t, o) ((d * 0x400000) + (t * 0x1000) + o)
 
 #define KP2V(x) (x + 0xC0000000)
 #define KV2P(x) (x - 0xC0000000)
+
+#define PDE_2_PAGE_TABLE_VADDR(pde) (KP2V(PAGE_ADDR(pde.frame)))
 
 struct page {
     uint32_t present    : 1;   // Present in memory if set
@@ -66,7 +71,7 @@ typedef struct page_dir_entry page_dir_entry_t;
 
 struct page_table {
     page_t pages[1024];
-} __attribute__((packed)) __attribute__((aligned(0x1000)));
+} __attribute__((packed)) __attribute__((aligned(PAGE_SIZE)));
 
 typedef struct page_table page_table_t;
 
@@ -75,7 +80,7 @@ struct page_directory {
     page_dir_entry_t page_dir_entries[1024]; // dir entries, physical table addresses for paging
     page_table_t* tables[1024]; // virtual addresses for r/w access to tables - NO PARAMS
     uint32_t directory_paddr; // physical address for paging
-} __attribute__((packed)) __attribute__((aligned(0x1000)));
+} __attribute__((packed)) __attribute__((aligned(PAGE_SIZE)));
 
 typedef struct page_directory page_directory_t;
 

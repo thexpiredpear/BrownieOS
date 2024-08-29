@@ -20,7 +20,7 @@ page_directory_t kernel_directory_aligned;
 page_directory_t* kernel_directory;
 page_directory_t* current_directory;
 
-page_table_t kernel_page_table[1024 - KERN_START_PAGE];
+page_table_t kernel_page_table[1024 - KERN_START_PAGE_TBL];
 
 void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
@@ -182,31 +182,45 @@ void reserve_mem_map(multiboot_info_t* mbd) {
     }
 }
 
+void set_pde(page_dir_entry_t* pde, uint8_t present, uint8_t rw, uint8_t user, uint32_t frame) {
+    pde->present = present;
+    pde->rw = rw;
+    pde->user = user;
+    pde->frame = frame;
+}
+
+void set_page(page_t* page, uint8_t present, uint8_t rw, uint8_t user, uint32_t frame) {
+    page->present = present;
+    page->rw = rw;
+    page->user = user;
+    page->frame = frame;
+}
+
 void setup_kernel_directory() {
     kernel_directory->directory_paddr = KV2P((uint32_t)kernel_directory);
     page_table_t* cur_table;
-    // map all kernel space pages
-    for(int i = 768; i < 1023; i++) {
-        cur_table = &kernel_page_table[i - KERN_START_PAGE];
+    // identity map all pages in lowmem (896MiB)
+    for(int i = KERN_START_PAGE_TBL; i < KERN_HIGHMEM_START_PAGE_TBL; i++) {
+        cur_table = &kernel_page_table[i - KERN_START_PAGE_TBL];
         kernel_directory->tables[i] = cur_table;
-        kernel_directory->page_dir_entries[i].present = 1;
-        kernel_directory->page_dir_entries[i].rw = 1;
-        kernel_directory->page_dir_entries[i].frame = 
-             KV2P((uint32_t)cur_table) >> 12;
+        set_pde(&(kernel_directory->page_dir_entries[i]), 1, 1, 0, 
+            // frame of pde is first 20 bits of physical table addr (last 12 bit zeroes)
+            PAGE_FRAME(KV2P((uint32_t)cur_table)));
         for(int j = 0; j < 1024; j++) {
-            cur_table->pages[j].present = 1;
-            cur_table->pages[j].rw = 1;
-            cur_table->pages[j].frame = ((i - KERN_START_PAGE) * 1024) + j;
+            set_page(&(cur_table->pages[j]), 1, 1, 0, 
+                // set page frame as current virtual address minus kernel offset / 0x1000
+                PAGE_FRAME(KV2P((PAGE_IDX_VADDR(i, j, 0)))));
         }
     }
-    // last page table for physical mapping requests
-    kernel_directory->tables[1023] = &kernel_page_table[255];
-    kernel_directory->page_dir_entries[1023].present = 1;
-    kernel_directory->page_dir_entries[1023].rw = 1;
-    kernel_directory->page_dir_entries[1023].frame = 
-        KV2P((uint32_t)&kernel_page_table[255]) >> 12;
-    // reflect GiB identity mapping in physical page framemap
-    for(int addr = 0; addr < 0x10000000; addr += PAGE_SIZE) {
+    // 128MiB reserved for specific phys mappings, devices, large contiguous buffers
+    for(int i = KERN_HIGHMEM_START_PAGE_TBL; i < 1024; i++) {
+        cur_table = &kernel_page_table[i - KERN_START_PAGE_TBL];
+        kernel_directory->tables[i] = cur_table;
+        set_pde(&(kernel_directory->page_dir_entries[i]), 1, 1, 0,
+            PAGE_FRAME(KV2P((uint32_t)cur_table)));
+    }
+    // reserve first GiB of pages in framemap
+    for(int addr = 0; addr < 1024 * 1024 * 1024; addr += PAGE_SIZE) {
         set_frame(addr);
     }
 }
