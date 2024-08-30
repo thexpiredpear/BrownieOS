@@ -9,10 +9,6 @@
 #include <core/idt.h>
 #include <core/isr.h>
 
-uint64_t memory;
-uint32_t* framemap;
-uint32_t nframes;
-
 extern uint32_t boot_page_directory[];
 extern uint32_t boot_page_table[];
 
@@ -21,6 +17,8 @@ page_directory_t* kernel_directory;
 page_directory_t* current_directory;
 
 page_table_t kernel_page_table[1024 - KERN_START_PAGE_TBL];
+
+uint32_t framemap[((PAGE_FRAME(EOM) + 1) / 32)];
 
 void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
@@ -232,11 +230,6 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         panic("Invalid multiboot magic number");
         return;
     }
-    memory = EOM; // TODO use grub memory map to determine memory size
-    nframes = PAGE_FRAME(memory) + 1;
-    // Bitmap of frames
-    framemap = (uint32_t*)wmmalloc((nframes / 32) * sizeof(uint32_t));
-    memset(framemap, 0, (nframes / 32) * sizeof(uint32_t));
     // Create kernel page directory
     kernel_directory = &kernel_directory_aligned;
     memset(kernel_directory, 0, sizeof(page_directory_t));
