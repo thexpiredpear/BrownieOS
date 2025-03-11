@@ -62,7 +62,7 @@ bool test_frame(uint32_t addr) {
 
 // return the first available frame
 uint32_t first_frame() {
-    for(uint32_t addr = 0; addr < memory; addr += PAGE_SIZE) {
+    for(uint32_t addr = 0; addr < EOM; addr += PAGE_SIZE) {
         if(!test_frame(addr)) {
             return PAGE_FRAME(addr);
         }
@@ -73,7 +73,7 @@ uint32_t first_frame() {
 // check if there are count number of available frames
 bool avail_frames(uint32_t count) {
     uint32_t free = 0;
-    for(uint32_t frame = 0; frame < memory; frame += PAGE_SIZE) {
+    for(uint32_t frame = 0; frame < EOM; frame += PAGE_SIZE) {
         if(!test_frame(frame)) {
             free++;
             if(free == count) {
