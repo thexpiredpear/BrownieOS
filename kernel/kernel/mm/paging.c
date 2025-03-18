@@ -4,20 +4,22 @@
 #include <string.h>
 #include <mm/paging.h>
 #include <mm/kmm.h>
+#include <drivers/tty.h>
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <core/idt.h>
 #include <core/isr.h>
 
-uint64_t memory;
-uint32_t* framemap;
-uint32_t nframes;
+uint8_t framemap[NFRAMES];
+
 
 extern uint32_t boot_page_directory[];
 extern uint32_t boot_page_table[];
 
+page_directory_t kernel_directory_aligned;
 page_directory_t* kernel_directory;
 page_directory_t* current_directory;
+page_table_t kernel_page_tables[1024 - KERN_START_TBL];
 
 void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
@@ -61,7 +63,7 @@ bool test_frame(uint32_t addr) {
 
 // return the first available frame
 uint32_t first_frame() {
-    for(uint32_t addr = 0; addr < memory; addr += PAGE_SIZE) {
+    for(uint32_t addr = 0; addr < EOM; addr += PAGE_SIZE) {
         if(!test_frame(addr)) {
             return PAGE_FRAME(addr);
         }
@@ -72,7 +74,7 @@ uint32_t first_frame() {
 // check if there are count number of available frames
 bool avail_frames(uint32_t count) {
     uint32_t free = 0;
-    for(uint32_t frame = 0; frame < memory; frame += PAGE_SIZE) {
+    for(uint32_t frame = 0; frame < EOM; frame += PAGE_SIZE) {
         if(!test_frame(frame)) {
             free++;
             if(free == count) {
@@ -205,6 +207,30 @@ void cp_boot_dir(uint32_t start_tbl, uint32_t end_tbl) {
     }
 }
 
+void setup_kernel_directory() {
+    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
+    page_table_t* cur_table;
+    for(uint32_t i = KERN_DMA_START_TBL; i < 1024; i++) {
+        cur_table = &kernel_page_tables[i - KERN_START_TBL];
+        kernel_directory->tables[i] = cur_table;
+        uint32_t cur_table_paddr = (uint32_t)(cur_table) - 0xC0000000;
+        kernel_directory->page_dir_entries[i].frame = (uint32_t)(cur_table_paddr) / PAGE_SIZE;
+        kernel_directory->page_dir_entries[i].present = 1;
+        //if(i >= KERN_NORMAL_START_TBL) {
+            kernel_directory->page_dir_entries[i].rw = 1;
+        //}
+        for(int j = 0; j < 1024; j++) {
+            // only set frame if should be id mapped (between 0MiB & 896MiB)
+            // highmem reserved for phys mapping, large virtually contig buffers, etc...
+            if(i < KERN_HIGHMEM_START_TBL) {
+                cur_table->pages[j].frame = (i - KERN_START_TBL) * 1024 + j;
+            }
+            cur_table->pages[j].present = 1;
+            cur_table->pages[j].rw = 1;
+        }
+    }
+}
+
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Register page fault handler
     isr_set_handler(14, &page_fault);
@@ -212,23 +238,12 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         panic("Invalid multiboot magic number");
         return;
     }
-    memory = EOM; // TODO use grub memory map to determine memory size
-    nframes = PAGE_FRAME(memory) + 1;
-    // Bitmap of frames
-    framemap = (uint32_t*)wmmalloc((nframes / 32) * sizeof(uint32_t));
-    memset(framemap, 0, (nframes / 32) * sizeof(uint32_t));
     // Create kernel page directory
-    kernel_directory = (page_directory_t*)wmmalloc_align(sizeof(page_directory_t));
-    memset(kernel_directory, 0, sizeof(page_directory_t));
-    current_directory = kernel_directory;
-    reserve_mem_map(mbd);
-    // Copy page tables from boot page directory
-    cp_boot_dir(768, 1024);
+    kernel_directory = &kernel_directory_aligned;
+    setup_kernel_directory();
     kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
-    // Reserve first 4MiB of memory for system/kernel wmmaloc 
-    // TODO: only reserve first MiB automatically and base rest on page dir
-    for(int addr = 0; addr < 0x400000; addr += PAGE_SIZE) {
-        set_frame(addr);
-    }
     swap_dir(kernel_directory);
+    current_directory = kernel_directory;
+    terminal_initialize();
+    reserve_mem_map(mbd);
 }

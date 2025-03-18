@@ -70,23 +70,9 @@ void free_pages(void* addr, size_t pages) {
 
 void* access_paddr_DANGER(uint32_t paddr) {
     // find a free kernel space page
-    page_table_t* table = kernel_directory->tables[1023];
-    for(int i = 0; i < 1024; i++) {
-        page_t* page = &(table->pages[i]);
-        if(*(uint32_t*)page == 0) {
-            page->present = 1;
-            page->rw = 1;
-            page->user = 0;
-            page->frame = paddr / PAGE_SIZE;
-            return (void*)(0xFFC00000 + (i * PAGE_SIZE) + (paddr % PAGE_SIZE));
-        }
-    }
-    return NULL;
+    return (void*)(0xC0000000 + paddr);
 }
 
 void clraccess_paddr_DANGER(void* vaddr) {
-    page_table_t* table = kernel_directory->tables[PAGE_DIR_IDX(vaddr)];
-    page_t* page = &(table->pages[PAGE_TBL_IDX(vaddr)]);
-    *(uint32_t*)page = 0;
     return;
 }

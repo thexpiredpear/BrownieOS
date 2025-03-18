@@ -9,7 +9,10 @@
 #define PAGE_SIZE 0x1000
 #define PAGE_TABLE_SIZE 0x1000
 #define EOM 0xFFFFFFFF
-#define KERN_START_PAGE 768
+#define KERN_START_TBL 768
+#define KERN_DMA_START_TBL 768
+#define KERN_NORMAL_START_TBL 772
+#define KERN_HIGHMEM_START_TBL 992
 
 #define PAGE_FAULT_PRESENT_A 0b1
 #define PAGE_FAULT_WRITE_A 0b10
@@ -29,6 +32,8 @@
 #define PAGE_TBL_IDX(x) (((uint32_t)x % 0x400000) / 0x1000)
 
 #define PAGE_IDX_VADDR(d, t, o) ((d * 0x400000) + (t * 0x1000) + o)
+
+#define NFRAMES (PAGE_FRAME(EOM)) + 1
 
 struct page {
     uint32_t present    : 1;   // Present in memory if set
@@ -59,7 +64,7 @@ typedef struct page_dir_entry page_dir_entry_t;
 
 struct page_table {
     page_t pages[1024];
-} __attribute__((packed));
+} __attribute__((packed)) __attribute__((aligned(0x1000)));
 
 typedef struct page_table page_table_t;
 
@@ -68,7 +73,7 @@ struct page_directory {
     page_dir_entry_t page_dir_entries[1024]; // dir entries, physical table addresses for paging
     page_table_t* tables[1024]; // virtual addresses for r/w access to tables - NO PARAMS
     uint32_t directory_paddr; // physical address for paging
-} __attribute__((packed));
+} __attribute__((packed)) __attribute__((aligned(0x1000)));
 
 typedef struct page_directory page_directory_t;
 
