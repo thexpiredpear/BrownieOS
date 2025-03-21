@@ -66,7 +66,6 @@ void kpause() {
 }
 
 void kmain(multiboot_info_t* mbd, uint32_t magic) {
-	terminal_initialize();
 	gdt_init();
 	idt_init();
 	paging_init(mbd, magic);

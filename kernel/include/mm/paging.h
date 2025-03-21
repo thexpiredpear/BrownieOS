@@ -6,34 +6,35 @@
 #include <core/multiboot.h>
 #include <core/isr.h>
 
-#define PAGE_SIZE 0x1000
-#define PAGE_TABLE_SIZE 0x1000
-#define EOM 0xFFFFFFFF
-#define KERN_START_TBL 768
-#define KERN_DMA_START_TBL 768
-#define KERN_NORMAL_START_TBL 772
-#define KERN_HIGHMEM_START_TBL 992
+#define PAGE_SIZE (0x1000)
+#define PAGE_TABLE_SIZE (0x1000)
+#define EOM (0xFFFFFFFF)
+#define KERN_START_TBL (768)
+#define KERN_HIGHMEM_START_TBL (992)
 
-#define PAGE_FAULT_PRESENT_A 0b1
-#define PAGE_FAULT_WRITE_A 0b10
-#define PAGE_FAULT_USER_A 0b100
-#define PAGE_FAULT_RESERVED_A 0b1000
+#define PAGE_FAULT_PRESENT_A (0b1)
+#define PAGE_FAULT_WRITE_A (0b10)
+#define PAGE_FAULT_USER_A (0b100)
+#define PAGE_FAULT_RESERVED_A (0b1000)
 
-#define PAGE_FRAME(x) (x / 0x1000)
-#define PAGE_FRAME_BITMAP_IDX(x) (x / 32)
-#define PAGE_FRAME_BITMAP_OFF(x) (x % 32)
+#define PAGE_FRAME(x) ((x) / 0x1000)
+#define PAGE_FRAME_BITMAP_IDX(x) ((x) / 32)
+#define PAGE_FRAME_BITMAP_OFF(x) ((x) % 32)
 
-#define PAGE_ADDR(x) (x * 0x1000)
+#define PAGE_ADDR(x) ((x) * 0x1000)
 
-#define PAGE_ROUND_DOWN(x) (x & 0xFFFFF000);
-#define PAGE_ROUND_UP(x) ((x % 0x1000) ? ((x & 0xFFFFF000) + 0x1000) : x)
+#define PAGE_ROUND_DOWN(x) ((x) & 0xFFFFF000);
+#define PAGE_ROUND_UP(x) (((x) % 0x1000) ? (((x) & 0xFFFFF000) + 0x1000) : (x))
 
-#define PAGE_DIR_IDX(x) ((uint32_t)x / 0x400000)
-#define PAGE_TBL_IDX(x) (((uint32_t)x % 0x400000) / 0x1000)
+#define PAGE_DIR_IDX(x) ((uint32_t)(x) / 0x400000)
+#define PAGE_TBL_IDX(x) (((uint32_t)(x) % 0x400000) / 0x1000)
 
-#define PAGE_IDX_VADDR(d, t, o) ((d * 0x400000) + (t * 0x1000) + o)
+#define PAGE_IDX_VADDR(d, t, o) (((d) * 0x400000) + ((t) * 0x1000) + (o))
 
-#define NFRAMES (PAGE_FRAME(EOM)) + 1
+#define NFRAMES ((PAGE_FRAME(EOM)) + 1)
+
+#define KV2P(x) ((x) - 0xC0000000)
+#define KP2V(x) ((x) + 0xC0000000)
 
 struct page {
     uint32_t present    : 1;   // Present in memory if set

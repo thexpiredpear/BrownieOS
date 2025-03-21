@@ -12,7 +12,6 @@
 
 uint8_t framemap[NFRAMES];
 
-
 extern uint32_t boot_page_directory[];
 extern uint32_t boot_page_table[];
 
@@ -187,38 +186,16 @@ void reserve_mem_map(multiboot_info_t* mbd) {
     }
 }
 
-void cp_boot_dir(uint32_t start_tbl, uint32_t end_tbl) {
-    for(int i = start_tbl; i <= end_tbl; i++) {
-        uint32_t dir_entry = (uint32_t)boot_page_directory[i];
-        page_table_t* new_page_table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
-        if(dir_entry) {
-            page_table_t* boot_page_table = (page_table_t*)((dir_entry & 0xFFFFF000)+0xC0000000);
-            for(int j = 0; j < 1024; j++) {
-                new_page_table->pages[j] = boot_page_table->pages[j];
-            }
-        }
-        uint32_t new_page_table_paddr = (uint32_t)(new_page_table) - 0xC0000000;
-        page_dir_entry_t new_dir_entry;
-        new_dir_entry.present = 1;
-        new_dir_entry.rw = 1;
-        new_dir_entry.frame = new_page_table_paddr / PAGE_SIZE;
-        kernel_directory->page_dir_entries[i] = new_dir_entry;
-        kernel_directory->tables[i] = (page_table_t*)new_page_table;
-    }
-}
-
 void setup_kernel_directory() {
     kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
     page_table_t* cur_table;
-    for(uint32_t i = KERN_DMA_START_TBL; i < 1024; i++) {
+    for(uint32_t i = KERN_START_TBL; i < 1024; i++) {
         cur_table = &kernel_page_tables[i - KERN_START_TBL];
         kernel_directory->tables[i] = cur_table;
         uint32_t cur_table_paddr = (uint32_t)(cur_table) - 0xC0000000;
         kernel_directory->page_dir_entries[i].frame = (uint32_t)(cur_table_paddr) / PAGE_SIZE;
         kernel_directory->page_dir_entries[i].present = 1;
-        //if(i >= KERN_NORMAL_START_TBL) {
-            kernel_directory->page_dir_entries[i].rw = 1;
-        //}
+        kernel_directory->page_dir_entries[i].rw = 1;
         for(int j = 0; j < 1024; j++) {
             // only set frame if should be id mapped (between 0MiB & 896MiB)
             // highmem reserved for phys mapping, large virtually contig buffers, etc...
