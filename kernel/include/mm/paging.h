@@ -86,14 +86,12 @@ typedef struct page_directory page_directory_t;
 
 void page_fault(int_regs_t*);
 
-bool avail_frames(uint32_t count);
-
 void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
 bool test_frame(uint32_t addr);
 
-void alloc_frame(page_t* page, bool rw, bool user);
-void free_frame(page_t* page);
+void alloc_pages(pmm_flags_t flags, uint32_t count);
+void free_pages(uint32_t addr, uint32_t count);
 
 void swap_dir(page_directory_t* dir);
 void flush_tlb(void);

@@ -61,7 +61,7 @@ bool test_frame(uint32_t addr) {
 }
 
 
-uint32_t alloc_pages(uint32_t count, pmm_flags_t flags) {
+uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     uint32_t addr = 0;
     uint32_t end = EOM;
     if(flags.highmem) {
