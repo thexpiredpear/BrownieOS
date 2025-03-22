@@ -39,7 +39,7 @@ uint32_t insert_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
          ordered_array->size++;
          return i;
    }
-   return 0xFFFFFFFF;
+   return NULL;
 }
 
 void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i) {

@@ -7,7 +7,7 @@
 #include <core/isr.h>
 
 #define PAGE_SIZE (0x1000)
-#define PAGE_TABLE_SIZE (0x1000)
+#define PAGE_TABLE_SIZE (0x400000)
 #define EOM (0xFFFFFFFF)
 #define KERN_START_TBL (768)
 #define KERN_HIGHMEM_START_TBL (992)
@@ -48,6 +48,12 @@ struct page {
 
 typedef struct page page_t;
 
+struct pmm_flags {
+    uint8_t highmem;
+}  __attribute__((packed));
+
+typedef struct pmm_flags pmm_flags_t;
+
 struct page_dir_entry {
     uint32_t present    : 1;   // Present in memory if set
     uint32_t rw         : 1;   // Readwrite if set
@@ -85,9 +91,6 @@ bool avail_frames(uint32_t count);
 void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
 bool test_frame(uint32_t addr);
-
-uint32_t first_frame(void);
-// uint32_t first_frame_from(uint32_t addr);
 
 void alloc_frame(page_t* page, bool rw, bool user);
 void free_frame(page_t* page);

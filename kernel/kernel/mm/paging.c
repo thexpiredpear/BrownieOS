@@ -60,55 +60,31 @@ bool test_frame(uint32_t addr) {
     return (framemap[index] & (0x1 << offset));
 }
 
-// return the first available frame
-uint32_t first_frame() {
-    for(uint32_t addr = 0; addr < EOM; addr += PAGE_SIZE) {
+
+uint32_t alloc_pages(uint32_t count, pmm_flags_t flags) {
+    uint32_t addr = 0;
+    uint32_t end = EOM;
+    if(flags.highmem) {
+        addr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
+    } else {
+        end = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE - 1;
+    }
+    for(uint32_t contig = 0; addr < end; addr += PAGE_SIZE) {
         if(!test_frame(addr)) {
-            return PAGE_FRAME(addr);
-        }
-    }
-    return -1;
-}
-
-// check if there are count number of available frames
-bool avail_frames(uint32_t count) {
-    uint32_t free = 0;
-    for(uint32_t frame = 0; frame < EOM; frame += PAGE_SIZE) {
-        if(!test_frame(frame)) {
-            free++;
-            if(free == count) {
-                return true;
+            if(++contig == count) {
+                return addr - (count - 1) * PAGE_SIZE;
             }
+        } else {
+            contig = 0;
         }
     }
-    return false;
+    return NULL;
 }
 
-void alloc_frame(page_t* page, bool user, bool rw) {
-    if(page->frame != 0) {
-        return;
+void free_pages(uint32_t addr, uint32_t count) {
+    for(uint32_t i = 0; i < count; i++) {
+        clear_frame(addr + i * PAGE_SIZE);
     }
-    uint32_t frame = first_frame();
-    set_frame(frame * PAGE_SIZE);
-    page->present = 1;
-    page->rw = (rw) ? 1 : 0;
-    page->user = (user) ? 1 : 0;
-    page->frame = frame;
-}
-
-void free_frame(page_t* page) {
-    uint32_t frame = page->frame;
-    if(!frame) {
-        return;
-    }
-    clear_frame(frame * PAGE_SIZE);
-    page->present = 0;
-    page->rw = 0;
-    page->user = 0;
-    page->accessed = 0;
-    page->dirty = 0;
-    page->unused = 0;
-    page->frame = 0;
 }
 
 void swap_dir(page_directory_t* dir) {
