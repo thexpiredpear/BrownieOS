@@ -9,7 +9,6 @@
 #include <core/acpi.h>
 #include <core/multiboot.h>
 #include <core/common.h>
-#include <mm/vmm.h>
 #include <mm/kmm.h>
 
 volatile uint64_t* gen_cap = 0;
@@ -43,7 +42,7 @@ void init_hpet(uint32_t freq) {
         panic("UNSUPPORTED HPET ADDRESS SPACE ID");
     }
 
-    void* hpet_addr = access_paddr_DANGER((hpet->addr & 0xFFFFFFFF));
+    void* hpet_addr = KP2V((hpet->addr & 0xFFFFFFFF));
     gen_cap = (volatile uint64_t*)hpet_addr;
     gen_conf = (volatile uint64_t*)(hpet_addr + 0x10);
     main_cnt = (volatile uint64_t*)(hpet_addr + 0xF0);

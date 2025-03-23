@@ -14,7 +14,6 @@
 #include <core/ioapic.h>
 #include <mm/kmm.h>
 #include <mm/paging.h>
-#include <mm/vmm.h>
 #include <drivers/hpet.h>
 
 #ifndef KERNEL_VERSION

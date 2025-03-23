@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <mm/paging.h>
 #include <core/isr.h>
-#include <mm/vmm.h>
 #include <drivers/tty.h>
 #include <core/idt.h>
 #include <core/common.h>
@@ -30,7 +30,7 @@ void irq_handler(int_regs_t* registers) {
         printf("received interrupt: code %d\n", registers->int_no);
     }
     // eoi apic 
-    *apic_eoi = 0;
+    //*apic_eoi = 0;
     return;
 }
 
@@ -40,5 +40,5 @@ void isr_set_handler(uint8_t int_no, isr_t handler) {
 }
 
 void isr_init() {
-    apic_eoi = (uint32_t*)access_paddr_DANGER(0xFEE000B0);
+    apic_eoi = (uint32_t*)KP2V(0xFEE000B0);
 }

@@ -62,17 +62,17 @@ bool test_frame(uint32_t addr) {
 
 
 uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
-    uint32_t addr = 0;
+    uint32_t paddr = 0;
     uint32_t end = EOM;
-    if(flags.highmem) {
-        addr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
+    if(flags & PMM_FLAGS_HIGHMEM) {
+        paddr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
     } else {
         end = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE - 1;
     }
-    for(uint32_t contig = 0; addr < end; addr += PAGE_SIZE) {
-        if(!test_frame(addr)) {
+    for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
+        if(!test_frame(paddr)) {
             if(++contig == count) {
-                return addr - (count - 1) * PAGE_SIZE;
+                return paddr - (count - 1) * PAGE_SIZE;
             }
         } else {
             contig = 0;
@@ -81,9 +81,10 @@ uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     return NULL;
 }
 
-void free_pages(uint32_t addr, uint32_t count) {
+void free_pages(uint32_t frame, uint32_t count) {
+    uint32_t paddr = frame * PAGE_SIZE;
     for(uint32_t i = 0; i < count; i++) {
-        clear_frame(addr + i * PAGE_SIZE);
+        clear_frame(paddr + i * PAGE_SIZE);
     }
 }
 
@@ -199,4 +200,5 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     current_directory = kernel_directory;
     terminal_initialize();
     reserve_mem_map(mbd);
+    reserve(0, PAGE_TABLE_SIZE);
 }

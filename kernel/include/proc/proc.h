@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <mm/paging.h>
-#include <mm/vmm.h>
 #include <core/common.h>
 
 #define MAXPROC 64

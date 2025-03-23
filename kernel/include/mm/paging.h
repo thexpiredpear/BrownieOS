@@ -18,8 +18,8 @@
 #define PAGE_FAULT_RESERVED_A (0b1000)
 
 #define PAGE_FRAME(x) ((x) / 0x1000)
-#define PAGE_FRAME_BITMAP_IDX(x) ((x) / 32)
-#define PAGE_FRAME_BITMAP_OFF(x) ((x) % 32)
+#define PAGE_FRAME_BITMAP_IDX(x) ((x) / 8)
+#define PAGE_FRAME_BITMAP_OFF(x) ((x) % 8)
 
 #define PAGE_ADDR(x) ((x) * 0x1000)
 
@@ -48,11 +48,10 @@ struct page {
 
 typedef struct page page_t;
 
-struct pmm_flags {
-    uint8_t highmem;
-}  __attribute__((packed));
+typedef uint8_t pmm_flags_t;
 
-typedef struct pmm_flags pmm_flags_t;
+#define PMM_FLAGS_DEFAULT ((uint8_t)0)
+#define PMM_FLAGS_HIGHMEM ((uint8_t)0b1)
 
 struct page_dir_entry {
     uint32_t present    : 1;   // Present in memory if set
@@ -90,7 +89,7 @@ void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
 bool test_frame(uint32_t addr);
 
-void alloc_pages(pmm_flags_t flags, uint32_t count);
+uint32_t alloc_pages(pmm_flags_t flags, uint32_t count);
 void free_pages(uint32_t addr, uint32_t count);
 
 void swap_dir(page_directory_t* dir);

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <mm/paging.h>
-#include <mm/vmm.h>
 #include <core/common.h>
 
 void copy_page_dir_cow(page_directory_t* src, page_directory_t* dest) {
