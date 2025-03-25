@@ -93,5 +93,5 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	// 8, 10-14, 17, 21 
 	//pit_init(50);
 	init_hpet(10000);
-	kpause();
+	//kpause();
 }

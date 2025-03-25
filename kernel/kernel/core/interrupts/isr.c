@@ -31,7 +31,7 @@ void irq_handler(int_regs_t* registers) {
         printf("received interrupt: code %d\n", registers->int_no);
     }
     // eoi apic 
-    //*apic_eoi = 0;
+    *apic_eoi = 0;
     return;
 }
 

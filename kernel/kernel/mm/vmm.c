@@ -15,7 +15,7 @@ void* kmap(uint32_t paddr) {
             for(uint32_t j = 0; j < 1024; j++) {
                 // find first free page in highmem
                 if(*((uint32_t*)(&table->pages[j])) == 0) {
-                    set_page(&table->pages[j], PAGE_FRAME(PAGE_IDX_VADDR(i, j, 0)), 1, 1, 0);
+                    set_page(&table->pages[j], PAGE_FRAME(paddr), 1, 1, 0);
                     return (void*)PAGE_IDX_VADDR(i, j, 0);
                 }
             }
