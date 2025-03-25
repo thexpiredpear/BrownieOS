@@ -48,6 +48,7 @@ kernel/drivers/pit.o \
 kernel/drivers/hpet.o \
 kernel/mm/kmm.o \
 kernel/mm/paging.o \
+kernel/mm/vmm.o
 
 OBJS=\
 kernel/boot/crti.o \

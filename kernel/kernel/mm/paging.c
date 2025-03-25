@@ -72,7 +72,7 @@ uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
         if(!test_frame(paddr)) {
             if(++contig == count) {
-                return paddr - (count - 1) * PAGE_SIZE;
+                return paddr - PAGE_PADDR((count - 1));
             }
         } else {
             contig = 0;
@@ -81,7 +81,7 @@ uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     return NULL;
 }
 
-void free_pages(uint32_t frame, uint32_t count) {
+void free_pages(uint32_t paddr, uint32_t count) {
     uint32_t paddr = frame * PAGE_SIZE;
     for(uint32_t i = 0; i < count; i++) {
         clear_frame(paddr + i * PAGE_SIZE);
@@ -91,7 +91,7 @@ void free_pages(uint32_t frame, uint32_t count) {
 void swap_dir(page_directory_t* dir) {
     current_directory = dir;
     // Move the page directory address into the cr3 register
-    asm volatile("mov %0, %%cr3":: "r"(dir->directory_paddr));
+    asm volatile("mov %0, %%cr3":: "r"(KV2P(dir)));
 }
 
 void flush_tlb() {
@@ -164,7 +164,6 @@ void reserve_mem_map(multiboot_info_t* mbd) {
 }
 
 void setup_kernel_directory() {
-    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
     page_table_t* cur_table;
     for(uint32_t i = KERN_START_TBL; i < 1024; i++) {
         cur_table = &kernel_page_tables[i - KERN_START_TBL];
@@ -185,6 +184,17 @@ void setup_kernel_directory() {
     }
 }
 
+void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user) {
+    page->frame = frame;
+    page->present = present;
+    page->rw = rw;
+    page->user = user;
+}
+
+page_directory_t* get_current_directory() {
+    return current_directory;
+}
+
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Register page fault handler
     isr_set_handler(14, &page_fault);
@@ -195,7 +205,6 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Create kernel page directory
     kernel_directory = &kernel_directory_aligned;
     setup_kernel_directory();
-    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
     swap_dir(kernel_directory);
     current_directory = kernel_directory;
     terminal_initialize();

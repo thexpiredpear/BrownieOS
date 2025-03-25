@@ -21,7 +21,7 @@
 #define PAGE_FRAME_BITMAP_IDX(x) ((x) / 8)
 #define PAGE_FRAME_BITMAP_OFF(x) ((x) % 8)
 
-#define PAGE_ADDR(x) ((x) * 0x1000)
+#define PAGE_PADDR(x) ((x) * 0x1000)
 
 #define PAGE_ROUND_DOWN(x) ((x) & 0xFFFFF000);
 #define PAGE_ROUND_UP(x) (((x) % 0x1000) ? (((x) & 0xFFFFF000) + 0x1000) : (x))
@@ -33,8 +33,8 @@
 
 #define NFRAMES ((PAGE_FRAME(EOM)) + 1)
 
-#define KV2P(x) ((x) - 0xC0000000)
-#define KP2V(x) ((x) + 0xC0000000)
+#define KV2P(x) ((uint32_t)(x) - 0xC0000000)
+#define KP2V(x) ((uint32_t)(x) + 0xC0000000)
 
 struct page {
     uint32_t present    : 1;   // Present in memory if set
@@ -78,7 +78,6 @@ struct page_directory {
     // page entries in page_dir_entry and tables are identical
     page_dir_entry_t page_dir_entries[1024]; // dir entries, physical table addresses for paging
     page_table_t* tables[1024]; // virtual addresses for r/w access to tables - NO PARAMS
-    uint32_t directory_paddr; // physical address for paging
 } __attribute__((packed)) __attribute__((aligned(0x1000)));
 
 typedef struct page_directory page_directory_t;
@@ -89,8 +88,8 @@ void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
 bool test_frame(uint32_t addr);
 
-uint32_t alloc_pages(pmm_flags_t flags, uint32_t count);
-void free_pages(uint32_t addr, uint32_t count);
+uint32_t alloc_frames(pmm_flags_t flags, uint32_t count);
+void free_frames(uint32_t addr, uint32_t count);
 
 void swap_dir(page_directory_t* dir);
 void flush_tlb(void);
@@ -101,9 +100,11 @@ uint32_t v_to_paddr(uint32_t addr);
 
 void copy_page_table_entries(page_table_t* src, page_table_t* dest);
 
-void paging_init(multiboot_info_t* mbd, uint32_t magic);
+void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user);
 
-page_t* get_page_from_vaddr(uint32_t vaddr, bool create, page_directory_t* dir);
+page_directory_t* get_current_directory();
+
+void paging_init(multiboot_info_t* mbd, uint32_t magic);
 
 
 #endif
