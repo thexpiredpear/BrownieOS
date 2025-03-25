@@ -81,7 +81,7 @@ uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     return NULL;
 }
 
-void free_pages(uint32_t paddr, uint32_t count) {
+void free_pages(uint32_t frame, uint32_t count) {
     uint32_t paddr = frame * PAGE_SIZE;
     for(uint32_t i = 0; i < count; i++) {
         clear_frame(paddr + i * PAGE_SIZE);

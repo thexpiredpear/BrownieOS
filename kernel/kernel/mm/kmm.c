@@ -4,6 +4,7 @@
 #include <string.h>
 #include <core/common.h>
 #include <mm/kmm.h>
+#include <mm/vmm.h>
 #include <mm/paging.h>
 
 extern uint32_t _kernel_end;

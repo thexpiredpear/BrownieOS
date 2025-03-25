@@ -88,8 +88,8 @@ void set_frame(uint32_t addr);
 void clear_frame(uint32_t addr);
 bool test_frame(uint32_t addr);
 
-uint32_t alloc_frames(pmm_flags_t flags, uint32_t count);
-void free_frames(uint32_t addr, uint32_t count);
+uint32_t alloc_pages(pmm_flags_t flags, uint32_t count);
+void free_pages(uint32_t frame, uint32_t count);
 
 void swap_dir(page_directory_t* dir);
 void flush_tlb(void);

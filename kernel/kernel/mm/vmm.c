@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 #include <mm/vmm.h>
 #include <mm/paging.h>
@@ -23,7 +24,7 @@ void* kmap(uint32_t paddr) {
 }
 
 void kunmap(void* vaddr) {
-    if(vaddr == NULL) {
+    if(vaddr == 0) {
         return;
     } else if((uint32_t)vaddr < 0xC0000000) {
         return;
