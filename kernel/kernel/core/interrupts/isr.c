@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <mm/paging.h>
+#include <mm/vmm.h>
 #include <core/isr.h>
 #include <drivers/tty.h>
 #include <core/idt.h>
@@ -40,5 +41,5 @@ void isr_set_handler(uint8_t int_no, isr_t handler) {
 }
 
 void isr_init() {
-    apic_eoi = (uint32_t*)KP2V(0xFEE000B0);
+    apic_eoi = (uint32_t*)kmap(0xFEE000B0);
 }

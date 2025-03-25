@@ -177,9 +177,9 @@ void setup_kernel_directory() {
             // highmem reserved for phys mapping, large virtually contig buffers, etc...
             if(i < KERN_HIGHMEM_START_TBL) {
                 cur_table->pages[j].frame = (i - KERN_START_TBL) * 1024 + j;
+                cur_table->pages[j].present = 1;
+                cur_table->pages[j].rw = 1;
             }
-            cur_table->pages[j].present = 1;
-            cur_table->pages[j].rw = 1;
         }
     }
 }

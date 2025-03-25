@@ -42,7 +42,7 @@ void init_hpet(uint32_t freq) {
         panic("UNSUPPORTED HPET ADDRESS SPACE ID");
     }
 
-    void* hpet_addr = KP2V((hpet->addr & 0xFFFFFFFF));
+    void* hpet_addr = kmap((hpet->addr & 0xFFFFFFFF));
     gen_cap = (volatile uint64_t*)hpet_addr;
     gen_conf = (volatile uint64_t*)(hpet_addr + 0x10);
     main_cnt = (volatile uint64_t*)(hpet_addr + 0xF0);
