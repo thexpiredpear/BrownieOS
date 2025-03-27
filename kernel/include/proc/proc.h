@@ -27,6 +27,13 @@ enum procstate {
 
 typedef enum procstate procstate_t;
 
+enum procpriority {
+    PROC_PRIORITY_LOW,
+    PROC_PRIORITY_NORMAL,
+    PROC_PRIORITY_HIGH
+}
+typedef enum procpriority procpriority_t;
+
 struct proc {
     uint32_t pid;
     page_directory_t* page_directory;
