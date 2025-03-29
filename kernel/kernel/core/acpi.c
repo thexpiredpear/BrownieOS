@@ -89,6 +89,7 @@ uint32_t find_table(char* sig) {
             if(strncmp(entry->signature, sig, 4) == 0) {
                 return (uint32_t)entry;
             }
+            kunmap(entry);
         }
     } else {
         uint32_t entries = (xsdt->header.length - sizeof(acpi_sdt_header_t)) / 8;
@@ -97,6 +98,7 @@ uint32_t find_table(char* sig) {
             if(strncmp(entry->signature, sig, 4) == 0) {
                 return (uint32_t)entry;
             }
+            kunmap(entry);
         }
     }
     return 0;
