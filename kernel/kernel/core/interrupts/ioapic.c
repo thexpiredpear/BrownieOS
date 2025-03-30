@@ -9,6 +9,7 @@
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <mm/kmm.h>
+#include <mm/vmm.h>
 
 uint32_t ioapic = 0;
 uint8_t ioapic_ver = 0;
