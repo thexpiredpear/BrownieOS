@@ -62,12 +62,12 @@ void find_rsdt_xsdt() {
         rsdt_ptr = (rsdt_t*)kmap(rsdp->rsdt_addr);
         rsdt = kmalloc(rsdt_ptr->header.length);
         memcpy(rsdt, rsdt_ptr, rsdt_ptr->header.length);
-        kunmap(rsdt_ptr);
         if(!acpi_sdt_checksum((acpi_sdt_header_t*)rsdt_ptr)) {
             panic("rsdt src checksum failed");
         } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)rsdt)) {
             panic("rsdt dst checksum failed");
         }
+        kunmap(rsdt_ptr);
     } else {
         panic("xsdt really shouldnt exist");
         // xsdt_ptr = (xsdt_t*)KP2V(rsdp->xsdt_addr);
@@ -109,36 +109,36 @@ void find_madt() {
     madt_ptr = (madt_t*)find_table(MADT_SIG);
     madt = kmalloc(madt_ptr->header.length);
     memcpy(madt, madt_ptr, madt_ptr->header.length);
-    kunmap(madt_ptr);
     if(!acpi_sdt_checksum((acpi_sdt_header_t*)madt_ptr)) {
         panic("madt src checksum invalid");
     } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)(madt))) {
         panic("madt dst checksum invalid");
     }
+    kunmap(madt_ptr);
 }
 
 void find_hpet() {
     hpet_ptr = (hpet_t*)find_table(HPET_SIG);
     hpet = kmalloc(hpet_ptr->header.length);
     memcpy(hpet, hpet_ptr, hpet_ptr->header.length);
-    kunmap(hpet_ptr);
     if(!acpi_sdt_checksum((acpi_sdt_header_t*)hpet_ptr)) {
         panic("hpet src checksum invalid");
     } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)hpet)) {
         panic("hpet dst checksum invalid");
     }
+    kunmap(hpet_ptr);
 }
 
 void find_fadt() {
     fadt_ptr = (fadt_t*)find_table(FADT_SIG);
     fadt = kmalloc(sizeof(fadt_t));
     memcpy(fadt, fadt_ptr, fadt_ptr->header.length);
-    kunmap(fadt_ptr);
     if(!acpi_sdt_checksum((acpi_sdt_header_t*)fadt_ptr)) {
         panic("fadt src checksum invalid");
     } else if (!acpi_sdt_checksum((acpi_sdt_header_t*)fadt)) {
         panic("fadt dst checksum invalid");
     }
+    kunmap(fadt_ptr);
 }
 
 bool rsdp_checksum() {
