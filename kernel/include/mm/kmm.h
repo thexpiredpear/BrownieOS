@@ -44,9 +44,6 @@ struct footer {
     uint64_t magic; // 0xB10CB10CB10CB10C   
 } __attribute__((packed));
 
-uint32_t wmmalloc(size_t size);
-uint32_t wmmalloc_align(size_t size);
-
 void print_kheap();
 
 header_t* alloc_from_header(header_t* header, footer_t* footer, size_t size);
