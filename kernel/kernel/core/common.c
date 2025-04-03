@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <mm/kmm.h>
-#include <mm/vmm.h>
 
 // TODO: implement w/ kmalloc
 ordered_array_t init_ordered_array(uint32_t max_size) {
@@ -39,7 +38,7 @@ uint32_t insert_ordered_array(ordered_array_t* ordered_array, uint32_t val) {
          ordered_array->size++;
          return i;
    }
-   return 0xFFFFFFFF;
+   return 0;
 }
 
 void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i) {

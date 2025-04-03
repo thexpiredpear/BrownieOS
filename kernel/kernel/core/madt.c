@@ -8,7 +8,6 @@
 #include <core/acpi.h>
 #include <core/multiboot.h>
 #include <core/common.h>
-#include <mm/vmm.h>
 #include <mm/kmm.h>
 
 uint8_t num_procs = 0;

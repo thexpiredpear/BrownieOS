@@ -6,8 +6,8 @@
 #include <core/acpi.h>
 #include <core/multiboot.h>
 #include <core/common.h>
-#include <mm/vmm.h>
 #include <mm/kmm.h>
+#include <mm/vmm.h>
 
 #define RSDP_SIG "RSD PTR "
 #define MADT_SIG "APIC"
@@ -35,9 +35,8 @@ fadt_t* fadt_ptr = NULL;
 fadt_t* fadt = NULL;
 
 void find_rsdp() {
-    uint32_t* edba_ptr_ptr = (uint32_t*)(access_paddr_DANGER(0x40E));
+    uint32_t* edba_ptr_ptr = (uint32_t*)(KP2V(0x40E));
     // TODO: actually search the ebda space properly 
-    clraccess_paddr_DANGER(edba_ptr_ptr);
     uint64_t* ptr = (uint64_t*)0xC00E0000;
     while((uint32_t)ptr < 0xC00FFFFF) {
         if(strncmp((char*)ptr, RSDP_SIG, 8) == 0) {
@@ -60,7 +59,7 @@ void find_rsdp() {
 
 void find_rsdt_xsdt() {
     if(acpi_version < 2) {
-        rsdt_ptr = (rsdt_t*)access_paddr_DANGER(rsdp->rsdt_addr);
+        rsdt_ptr = (rsdt_t*)kmap(rsdp->rsdt_addr);
         rsdt = kmalloc(rsdt_ptr->header.length);
         memcpy(rsdt, rsdt_ptr, rsdt_ptr->header.length);
         if(!acpi_sdt_checksum((acpi_sdt_header_t*)rsdt_ptr)) {
@@ -68,17 +67,17 @@ void find_rsdt_xsdt() {
         } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)rsdt)) {
             panic("rsdt dst checksum failed");
         }
-        clraccess_paddr_DANGER(rsdt_ptr);
+        kunmap(rsdt_ptr);
     } else {
-        xsdt_ptr = (xsdt_t*)access_paddr_DANGER(rsdp->xsdt_addr);
-        xsdt = kmalloc(xsdt_ptr->header.length);
-        memcpy(xsdt, xsdt_ptr, xsdt_ptr->header.length);
-        if(!acpi_sdt_checksum((acpi_sdt_header_t*)xsdt_ptr)) {
-            panic("xsdt src checksum failed");
-        } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)xsdt)) {
-            panic("xsdt dst checksum failed");
-        }
-        clraccess_paddr_DANGER(xsdt_ptr);
+        panic("xsdt really shouldnt exist");
+        // xsdt_ptr = (xsdt_t*)KP2V(rsdp->xsdt_addr);
+        // xsdt = kmalloc(xsdt_ptr->header.length);
+        // memcpy(xsdt, xsdt_ptr, xsdt_ptr->header.length);
+        // if(!acpi_sdt_checksum((acpi_sdt_header_t*)xsdt_ptr)) {
+        //     panic("xsdt src checksum failed");
+        // } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)xsdt)) {
+        //     panic("xsdt dst checksum failed");
+        // }
     }
 }
 
@@ -86,20 +85,20 @@ uint32_t find_table(char* sig) {
     if(acpi_version < 2) {
         uint32_t entries = (rsdt->header.length - sizeof(acpi_sdt_header_t)) / 4;
         for(uint32_t i = 0; i < entries; i++) {
-            acpi_sdt_header_t* entry = (acpi_sdt_header_t*)access_paddr_DANGER(rsdt->sdt_ptrs[i]);
+            acpi_sdt_header_t* entry = (acpi_sdt_header_t*)kmap(rsdt->sdt_ptrs[i]);
             if(strncmp(entry->signature, sig, 4) == 0) {
                 return (uint32_t)entry;
             }
-            clraccess_paddr_DANGER(entry);
+            kunmap(entry);
         }
     } else {
         uint32_t entries = (xsdt->header.length - sizeof(acpi_sdt_header_t)) / 8;
         for(uint32_t i = 0; i < entries; i++) {
-            acpi_sdt_header_t* entry = (acpi_sdt_header_t*)access_paddr_DANGER(xsdt->sdt_ptrs[i]);
+            acpi_sdt_header_t* entry = (acpi_sdt_header_t*)kmap(xsdt->sdt_ptrs[i]);
             if(strncmp(entry->signature, sig, 4) == 0) {
                 return (uint32_t)entry;
             }
-            clraccess_paddr_DANGER(entry);
+            kunmap(entry);
         }
     }
     return 0;
@@ -115,7 +114,7 @@ void find_madt() {
     } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)(madt))) {
         panic("madt dst checksum invalid");
     }
-    clraccess_paddr_DANGER(madt_ptr);
+    kunmap(madt_ptr);
 }
 
 void find_hpet() {
@@ -127,7 +126,7 @@ void find_hpet() {
     } else if(!acpi_sdt_checksum((acpi_sdt_header_t*)hpet)) {
         panic("hpet dst checksum invalid");
     }
-    clraccess_paddr_DANGER(hpet_ptr);
+    kunmap(hpet_ptr);
 }
 
 void find_fadt() {
@@ -139,7 +138,7 @@ void find_fadt() {
     } else if (!acpi_sdt_checksum((acpi_sdt_header_t*)fadt)) {
         panic("fadt dst checksum invalid");
     }
-    clraccess_paddr_DANGER(fadt_ptr);
+    kunmap(fadt_ptr);
 }
 
 bool rsdp_checksum() {
@@ -210,9 +209,6 @@ fadt_t* get_fadt() {
 }
 
 void init_acpi() {
-    void* fix = kmalloc(0x400000);
-    printf("%x\n",(uint32_t)fix);
-    kfree(fix);
     find_rsdp();
     find_rsdt_xsdt();
     find_madt();

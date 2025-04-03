@@ -8,8 +8,8 @@
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <core/ioapic.h>
-#include <mm/vmm.h>
 #include <mm/kmm.h>
+#include <mm/vmm.h>
 
 #define IA32_APIC_BASE_MSR 0x1B
 
@@ -42,7 +42,7 @@ void init_apic() {
         panic("apic not available");
     }
     disable_pic();
-    void* apic_base = access_paddr_DANGER(get_apic_base());
+    void* apic_base = kmap(get_apic_base());
     // write to spurious interrupt register to enable apic
     volatile uint32_t* spurious = (uint32_t*)((uint32_t)apic_base + 0xF0);
     *spurious = *spurious | 0x1FF;

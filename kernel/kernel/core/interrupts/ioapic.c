@@ -8,8 +8,8 @@
 #include <core/acpi.h>
 #include <core/multiboot.h>
 #include <core/common.h>
-#include <mm/vmm.h>
 #include <mm/kmm.h>
+#include <mm/vmm.h>
 
 uint32_t ioapic = 0;
 uint8_t ioapic_ver = 0;
@@ -32,7 +32,7 @@ uint32_t read_ioapic(uint32_t reg) {
 }
 
 void init_ioapic() {
-    ioapic = (uint32_t)access_paddr_DANGER((uint32_t)get_ioapic_addr());
+    ioapic = (uint32_t)kmap((uint32_t)get_ioapic_addr());
     gsi_entries = get_iso_entries();
     printf("phys addr: %x\n", get_ioapic_addr());
     ioapic_ver = read_ioapic(IOAPIC_VER_REG) & 0xFF;

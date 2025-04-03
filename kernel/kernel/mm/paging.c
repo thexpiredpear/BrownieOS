@@ -4,20 +4,21 @@
 #include <string.h>
 #include <mm/paging.h>
 #include <mm/kmm.h>
+#include <drivers/tty.h>
 #include <core/multiboot.h>
 #include <core/common.h>
 #include <core/idt.h>
 #include <core/isr.h>
 
-uint64_t memory;
-uint32_t* framemap;
-uint32_t nframes;
+uint8_t framemap[NFRAMES];
 
 extern uint32_t boot_page_directory[];
 extern uint32_t boot_page_table[];
 
+page_directory_t kernel_directory_aligned;
 page_directory_t* kernel_directory;
 page_directory_t* current_directory;
+page_table_t kernel_page_tables[1024 - KERN_START_TBL];
 
 void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
@@ -59,61 +60,38 @@ bool test_frame(uint32_t addr) {
     return (framemap[index] & (0x1 << offset));
 }
 
-// return the first available frame
-uint32_t first_frame() {
-    for(uint32_t addr = 0; addr < memory; addr += PAGE_SIZE) {
-        if(!test_frame(addr)) {
-            return PAGE_FRAME(addr);
-        }
-    }
-    return -1;
-}
 
-// check if there are count number of available frames
-bool avail_frames(uint32_t count) {
-    uint32_t free = 0;
-    for(uint32_t frame = 0; frame < memory; frame += PAGE_SIZE) {
-        if(!test_frame(frame)) {
-            free++;
-            if(free == count) {
-                return true;
+uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
+    uint32_t paddr = 0;
+    uint32_t end = EOM;
+    if(flags & PMM_FLAGS_HIGHMEM) {
+        paddr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
+    } else {
+        end = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE - 1;
+    }
+    for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
+        if(!test_frame(paddr)) {
+            if(++contig == count) {
+                return paddr - PAGE_PADDR((count - 1));
             }
+        } else {
+            contig = 0;
         }
     }
-    return false;
+    return NULL;
 }
 
-void alloc_frame(page_t* page, bool user, bool rw) {
-    if(page->frame != 0) {
-        return;
+void free_pages(uint32_t frame, uint32_t count) {
+    uint32_t paddr = frame * PAGE_SIZE;
+    for(uint32_t i = 0; i < count; i++) {
+        clear_frame(paddr + i * PAGE_SIZE);
     }
-    uint32_t frame = first_frame();
-    set_frame(frame * PAGE_SIZE);
-    page->present = 1;
-    page->rw = (rw) ? 1 : 0;
-    page->user = (user) ? 1 : 0;
-    page->frame = frame;
-}
-
-void free_frame(page_t* page) {
-    uint32_t frame = page->frame;
-    if(!frame) {
-        return;
-    }
-    clear_frame(frame * PAGE_SIZE);
-    page->present = 0;
-    page->rw = 0;
-    page->user = 0;
-    page->accessed = 0;
-    page->dirty = 0;
-    page->unused = 0;
-    page->frame = 0;
 }
 
 void swap_dir(page_directory_t* dir) {
     current_directory = dir;
     // Move the page directory address into the cr3 register
-    asm volatile("mov %0, %%cr3":: "r"(dir->directory_paddr));
+    asm volatile("mov %0, %%cr3":: "r"(KV2P(dir)));
 }
 
 void flush_tlb() {
@@ -185,24 +163,36 @@ void reserve_mem_map(multiboot_info_t* mbd) {
     }
 }
 
-void cp_boot_dir(uint32_t start_tbl, uint32_t end_tbl) {
-    for(int i = start_tbl; i <= end_tbl; i++) {
-        uint32_t dir_entry = (uint32_t)boot_page_directory[i];
-        page_table_t* new_page_table = (page_table_t*)wmmalloc_align(sizeof(page_table_t));
-        if(dir_entry) {
-            page_table_t* boot_page_table = (page_table_t*)((dir_entry & 0xFFFFF000)+0xC0000000);
-            for(int j = 0; j < 1024; j++) {
-                new_page_table->pages[j] = boot_page_table->pages[j];
+void setup_kernel_directory() {
+    page_table_t* cur_table;
+    for(uint32_t i = KERN_START_TBL; i < 1024; i++) {
+        cur_table = &kernel_page_tables[i - KERN_START_TBL];
+        kernel_directory->tables[i] = cur_table;
+        uint32_t cur_table_paddr = (uint32_t)(cur_table) - 0xC0000000;
+        kernel_directory->page_dir_entries[i].frame = (uint32_t)(cur_table_paddr) / PAGE_SIZE;
+        kernel_directory->page_dir_entries[i].present = 1;
+        kernel_directory->page_dir_entries[i].rw = 1;
+        for(int j = 0; j < 1024; j++) {
+            // only set frame if should be id mapped (between 0MiB & 896MiB)
+            // highmem reserved for phys mapping, large virtually contig buffers, etc...
+            if(i < KERN_HIGHMEM_START_TBL) {
+                cur_table->pages[j].frame = (i - KERN_START_TBL) * 1024 + j;
+                cur_table->pages[j].present = 1;
+                cur_table->pages[j].rw = 1;
             }
         }
-        uint32_t new_page_table_paddr = (uint32_t)(new_page_table) - 0xC0000000;
-        page_dir_entry_t new_dir_entry;
-        new_dir_entry.present = 1;
-        new_dir_entry.rw = 1;
-        new_dir_entry.frame = new_page_table_paddr / PAGE_SIZE;
-        kernel_directory->page_dir_entries[i] = new_dir_entry;
-        kernel_directory->tables[i] = (page_table_t*)new_page_table;
     }
+}
+
+void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user) {
+    page->frame = frame;
+    page->present = present;
+    page->rw = rw;
+    page->user = user;
+}
+
+page_directory_t* get_current_directory() {
+    return current_directory;
 }
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
@@ -212,23 +202,12 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
         panic("Invalid multiboot magic number");
         return;
     }
-    memory = EOM; // TODO use grub memory map to determine memory size
-    nframes = PAGE_FRAME(memory) + 1;
-    // Bitmap of frames
-    framemap = (uint32_t*)wmmalloc((nframes / 32) * sizeof(uint32_t));
-    memset(framemap, 0, (nframes / 32) * sizeof(uint32_t));
     // Create kernel page directory
-    kernel_directory = (page_directory_t*)wmmalloc_align(sizeof(page_directory_t));
-    memset(kernel_directory, 0, sizeof(page_directory_t));
-    current_directory = kernel_directory;
-    reserve_mem_map(mbd);
-    // Copy page tables from boot page directory
-    cp_boot_dir(768, 1024);
-    kernel_directory->directory_paddr = (uint32_t)(kernel_directory) - 0xC0000000;
-    // Reserve first 4MiB of memory for system/kernel wmmaloc 
-    // TODO: only reserve first MiB automatically and base rest on page dir
-    for(int addr = 0; addr < 0x400000; addr += PAGE_SIZE) {
-        set_frame(addr);
-    }
+    kernel_directory = &kernel_directory_aligned;
+    setup_kernel_directory();
     swap_dir(kernel_directory);
+    current_directory = kernel_directory;
+    terminal_initialize();
+    reserve_mem_map(mbd);
+    reserve(0, PAGE_TABLE_SIZE);
 }
