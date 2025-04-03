@@ -7,7 +7,7 @@ struct int_regs {
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // PUSHAD
     uint32_t int_no, err_code;  // PUSHED BY ISR
     uint32_t eip, cs, eflags; // PUSHED BY CPU
-};
+} __attribute__((packed));
 
 typedef struct int_regs int_regs_t;
 
