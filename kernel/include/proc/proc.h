@@ -40,4 +40,4 @@ struct proc {
     procstate_t procstate;
 }
 
-void (page_directory_t* src, page_directory_t* dest);
+void fork_page_dir(page_directory_t* src, page_directory_t* dest);
