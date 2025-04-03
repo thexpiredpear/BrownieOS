@@ -282,7 +282,7 @@ void kfree(void* ptr) {
 void kheap_init() {
     kheap_header_array = init_ordered_array_place((void*)(&header_ptr_array), 4096);
     kheap_footer_array = init_ordered_array_place((void*)(&footer_ptr_array), 4096);
-    uint32_t start = kmap(alloc_pages(PMM_FLAGS_DEFAULT, KHEAP_PAGES));
+    uint32_t start = KP2V(alloc_pages(PMM_FLAGS_DEFAULT, KHEAP_PAGES));
     uint32_t end = start + (1024 * PAGE_SIZE);
     header_t* init_header = (header_t*)start;
     footer_t* init_footer = (footer_t*)(end - sizeof(footer_t));

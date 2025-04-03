@@ -65,7 +65,7 @@ struct page_dir_entry {
     uint32_t unused     : 4;   // Unused / reserved bits
     uint32_t frame      : 20;  // Frame address (shifted right 12 bits)
 } __attribute__((packed));
-
+    
 typedef struct page_dir_entry page_dir_entry_t;
 
 struct page_table {
