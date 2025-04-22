@@ -38,6 +38,7 @@ struct proc {
     page_directory_t* page_directory;
     proc_context_t* context;
     procstate_t procstate;
+    void* brk;
 }
 
-void fork_page_dir(page_directory_t* src, page_directory_t* dest);
+void clone_page_dir(page_directory_t* src, page_directory_t* dest);

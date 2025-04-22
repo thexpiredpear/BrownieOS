@@ -4,7 +4,10 @@
 #include <mm/paging.h>
 #include <core/common.h>
 
-void fork_page_dir(page_directory_t* src, page_directory_t* dest) {
+uint32_t pid_ctr = 0;
+proc_t* current_proc;
+
+void clone_page_dir(page_directory_t* src, page_directory_t* dest) {
     for(int i = 0; i < 1024, i++) {
         // copy entries for kernel pages, should refer to same physical addresses
         if(i < KERN_START_TBL) {
@@ -40,4 +43,8 @@ void fork_page_dir(page_directory_t* src, page_directory_t* dest) {
             }
         }
     }
+}
+
+void proc_init() {
+    
 }

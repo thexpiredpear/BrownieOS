@@ -7,11 +7,6 @@
 #include <mm/vmm.h>
 #include <mm/paging.h>
 
-extern uint32_t _kernel_end;
-extern page_directory_t* kernel_directory;
-extern page_directory_t* current_directory;
-uint32_t wmloc = (uint32_t)&_kernel_end;
-
 ordered_array_t kheap_header_array;
 ordered_array_t kheap_footer_array;
 heap_t kheap;

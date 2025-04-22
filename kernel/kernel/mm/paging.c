@@ -17,7 +17,6 @@ extern uint32_t boot_page_table[];
 
 page_directory_t kernel_directory_aligned;
 page_directory_t* kernel_directory;
-page_directory_t* current_directory;
 page_table_t kernel_page_tables[1024 - KERN_START_TBL];
 
 void page_fault(int_regs_t* registers) {
@@ -89,7 +88,6 @@ void free_pages(uint32_t frame, uint32_t count) {
 }
 
 void swap_dir(page_directory_t* dir) {
-    current_directory = dir;
     // Move the page directory address into the cr3 register
     asm volatile("mov %0, %%cr3":: "r"(KV2P(dir)));
 }
@@ -110,12 +108,6 @@ void reserve(uint32_t start, uint32_t length) {
     for(uint64_t addr = start; addr < end; addr += PAGE_SIZE) {
         set_frame(addr);
     }
-}
-
-uint32_t v_to_paddr(uint32_t addr) {
-    uint32_t table = PAGE_DIR_IDX(addr);
-    uint32_t page = PAGE_TBL_IDX(addr);
-    return (current_directory->tables[table]->pages[page].frame * PAGE_SIZE) + (addr % PAGE_SIZE);
 }
 
 void copy_page_table_entries(page_table_t* src, page_table_t* dest) {
@@ -191,10 +183,6 @@ void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user) {
     page->user = user;
 }
 
-page_directory_t* get_current_directory() {
-    return current_directory;
-}
-
 void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     // Register page fault handler
     isr_set_handler(14, &page_fault);
@@ -206,7 +194,6 @@ void paging_init(multiboot_info_t* mbd, uint32_t magic) {
     kernel_directory = &kernel_directory_aligned;
     setup_kernel_directory();
     swap_dir(kernel_directory);
-    current_directory = kernel_directory;
     terminal_initialize();
     reserve_mem_map(mbd);
     reserve(0, PAGE_TABLE_SIZE);

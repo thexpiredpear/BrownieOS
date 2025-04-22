@@ -96,13 +96,9 @@ void flush_tlb(void);
 
 void reserve(uint32_t start, uint32_t length);
 
-uint32_t v_to_paddr(uint32_t addr);
-
 void copy_page_table_entries(page_table_t* src, page_table_t* dest);
 
 void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user);
-
-page_directory_t* get_current_directory();
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic);
 
