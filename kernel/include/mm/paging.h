@@ -98,6 +98,8 @@ void reserve(uint32_t start, uint32_t length);
 
 void copy_page_table_entries(page_table_t* src, page_table_t* dest);
 
+void clone_page_dir(page_directory_t* src, page_directory_t* dest);
+
 void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user);
 
 void paging_init(multiboot_info_t* mbd, uint32_t magic);

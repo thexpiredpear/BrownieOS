@@ -37,7 +37,7 @@ void printsyms() {
 	extern uint32_t ks;
 	extern uint32_t ke;
 	extern uint32_t ts;
-	extern uint32_t te;
+
 	extern uint32_t rs;
 	extern uint32_t re;
 	extern uint32_t dtas;
@@ -48,7 +48,7 @@ void printsyms() {
 	printf("%x KERNEL START\n\n", ks);
 	printf("%x TEST \n\n", test);
 	printf("%x TEXT START\n", ts);
-	printf("%x TEXT END\n\n", te);
+	//printf("%x TEXT END\n\n", te);
 	printf("%x READONLY START\n", rs);
 	printf("%x READONLY END\n\n", re);
 	printf("%x DATA START\n", dtas);
@@ -77,7 +77,8 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//init_apic();
 	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
-	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
+
+"	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
 	printf("\nkmalloc: %x\n", max_is_a_nerd_a);
 	printf("kmalloc: %x\n\n", max_is_a_nerd_b);
 	print_kheap();
@@ -91,7 +92,11 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
+	printf("Created new address space (stack size 4KiB @ 0xC0000000, entry @ 16MiB)\n");
+	printf("Switching to new address space...\n");
+	printf("Hello, world! From new address space with page directory at 0xC46FE000\n");
 	pit_init(1000);
 	//init_hpet(10000);
+	
 	kpause();
 }

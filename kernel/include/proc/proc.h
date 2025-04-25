@@ -36,9 +36,13 @@ typedef uint32_t pid_t;
 struct proc {
     pit_t pid;
     page_directory_t* page_directory;
-    proc_context_t* context;
+    proc_context_t context;
     procstate_t procstate;
+    procpriority_t priority;
     void* brk;
+    void* heap_start;
+    void* stack_base;
+    uint32_t stack_size;
 }
 
-void clone_page_dir(page_directory_t* src, page_directory_t* dest);
+void proc_init(proc_t* proc);

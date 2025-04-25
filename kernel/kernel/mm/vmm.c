@@ -3,13 +3,15 @@
 #include <mm/vmm.h>
 #include <mm/paging.h>
 
+extern page_directory_t* kernel_directory;
+
 void* kmap(uint32_t paddr) {
     if(paddr == 0) {
         return NULL;
     } else if(paddr < 0x40000000) {
         return (void*)KP2V(paddr);
     } else {
-        page_directory_t* dir = get_current_directory();
+        page_directory_t* dir = kernel_directory;
         for(uint32_t i = KERN_HIGHMEM_START_TBL; i < 1024; i++) {
             page_table_t* table = dir->tables[i];
             for(uint32_t j = 0; j < 1024; j++) {
@@ -29,7 +31,7 @@ void kunmap(void* vaddr) {
     } else if((uint32_t)vaddr < 0xC0000000) {
         return;
     } else {
-        page_directory_t* dir = get_current_directory();
+        page_directory_t* dir = kernel_directory;
         uint32_t table = PAGE_DIR_IDX((uint32_t)vaddr);
         uint32_t page = PAGE_TBL_IDX((uint32_t)vaddr);
         *(uint32_t*)(&(dir->tables[table]->pages[page])) = 0;
