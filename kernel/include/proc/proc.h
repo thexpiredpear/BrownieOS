@@ -5,6 +5,7 @@
 #include <core/common.h>
 
 #define MAXPROC 64
+#define PROC_STACK_TOP 0xBFFFFFF0
 
 struct context {
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -41,7 +42,7 @@ struct proc {
     procpriority_t priority;
     void* brk;
     void* heap_start;
-    void* stack_base;
+    void* stack_top;
     uint32_t stack_size;
 }
 

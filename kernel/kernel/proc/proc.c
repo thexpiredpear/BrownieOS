@@ -18,22 +18,22 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     proc->procstate = PROC_SETUP;
     proc->priority = priority;
 
-    proc->page_directory = (page_directory_t*)kmalloc(sizeof(page_directory_t));
+    proc->page_directory = (page_directory_t*)KP2V(alloc_pages(PMM_FLAGS_DEFAULT, 2));
 
     clone_page_dir(kernel_directory, proc->page_directory);
 
-    uint32_t stack_pages = (stack_size + PAGE_SIZE - 1) / PAGE_SIZE;
+    uint32_t stack_top = PROC_STACK_TOP;
+    uint32_t stack_bottom = stack_top - stack_size;
+
+    uint32_t stack_pages = ((stack_top + 0xFFF) & ~0xFFF) - (stack_bottom & ~0xFFF) / PAGE_SIZE;
     uint32_t stack_phys = alloc_pages(PMM_FLAGS_HIGHMEM, stack_pages);
 
-    uint32_t stack_base = 0xC0000000 - PAGE_SIZE;
-    uint32_t stack_end = stack_base - stack_size; 
-
-    proc->stack_base = (void*)stack_base;
+    proc->stack_top = (void*)stack_top;
     proc->stack_size = stack_size;
 
     for(uint32_t i = 0;  i < stack_pages; i++) {
         uint32_t phys = stack_phys + i * PAGE_SIZE;
-        uint32_t virt = stack_base + i * PAGE_SIZE;
+        uint32_t virt = stack_bottom + i * PAGE_SIZE; // align to page size
 
         uint32_t pd_idx = PAGE_DIR_IDX(virt);
         uint32_t pt_idx = PAGE_TBL_IDX(virt);
@@ -55,6 +55,6 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     }
 
     proc->context.eip = (uint32_t)entry;
-    proc->context.esp = stack_base - 16; // set stack pointer to top of stack w/ some paddding
+    proc->context.esp = stack_top - 16; // set stack pointer to top of stack w/ some paddding
     proc->context.ebp = proc->context.esp; // set base pointer to stack pointer
 }
