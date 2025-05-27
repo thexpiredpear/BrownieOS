@@ -45,4 +45,4 @@ struct proc {
     uint32_t stack_size;
 }
 
-void proc_init(proc_t* proc);
+proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority);

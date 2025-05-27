@@ -11,7 +11,7 @@ uint32_t pid_ctr = 0;
 proc_t* current_proc;
 extern page_directory_t* kernel_directory;
 
-proc_t* proc_init(void* entry, uint32_t stack_size, procpriority_t priority) {
+proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority) {
     proc_t* proc = (proc_t*)kmalloc(sizeof(proc_t));
 
     proc->pid = ++pid_ctr;
