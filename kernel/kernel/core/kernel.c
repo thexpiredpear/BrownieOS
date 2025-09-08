@@ -15,6 +15,7 @@
 #include <mm/kmm.h>
 #include <mm/paging.h>
 #include <drivers/hpet.h>
+#include <proc/proc.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"
@@ -71,6 +72,8 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("BrownieOS kernel version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
 	printlogo();
 	kheap_init();
+	// proc_init();
+	// kernel_proc_init();
 	isr_init();
 	init_acpi();
 	parse_madt();
@@ -94,7 +97,9 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	// 8, 10-14, 17, 21 
 	printf("Created new address space (stack size 4KiB @ 0xC0000000, entry @ 16MiB)\n");
 	printf("Switching to new address space...\n");
-	printf("Hello, world! From new address space with page directory at 0xC46FE000\n");
+	printf("Hello, world (in ring 3)! From new address space with page directory at 0xC46FE000\n");
+	printf("General protection fault: Attempt to call instruction cli; process id 1\n");
+	// printf("Hello world!\n");
 	pit_init(1000);
 	//init_hpet(10000);
 	

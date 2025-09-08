@@ -20,7 +20,7 @@ enum procstate {
     PROC_RUNNING,
     PROC_BLOCKED,
     PROC_DESTROY
-}
+};
 
 typedef enum procstate procstate_t;
 
@@ -28,14 +28,14 @@ enum procpriority {
     PROC_PRIORITY_LOW,
     PROC_PRIORITY_NORMAL,
     PROC_PRIORITY_HIGH
-}
+};
 
 typedef enum procpriority procpriority_t;
 
 typedef uint32_t pid_t;
 
 struct proc {
-    pit_t pid;
+    pid_t pid;
     page_directory_t* page_directory;
     proc_context_t context;
     procstate_t procstate;
@@ -44,6 +44,13 @@ struct proc {
     void* heap_start;
     void* stack_top;
     uint32_t stack_size;
-}
+};
 
+typedef struct proc proc_t;
+
+extern proc_t* proc_list[MAXPROC];
+extern proc_t* current_proc;
+
+void proc_init(void);
+void kernel_proc_init(void);
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority);
