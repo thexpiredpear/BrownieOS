@@ -69,7 +69,12 @@ uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
     for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
         if(!test_frame(paddr)) {
             if(++contig == count) {
-                return paddr - PAGE_PADDR((count - 1));
+                // Found a contiguous range; mark frames as used before returning
+                uint32_t base = paddr - PAGE_PADDR((count - 1));
+                for(uint32_t i = 0; i < count; i++) {
+                    set_frame(base + i * PAGE_SIZE);
+                }
+                return base;
             }
         } else {
             contig = 0;
