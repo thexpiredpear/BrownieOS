@@ -30,6 +30,9 @@ struct redir_entry_hi {
 
 typedef struct redir_entry_hi redir_entry_hi_t;
 
+// Maps and initializes the IOAPIC MMIO registers based on MADT data: programs
+// redirection table entries to deliver GSIs to the LAPIC with proper vectors,
+// honoring any interrupt source overrides. Uses `kmap` for MMIO access.
 void init_ioapic();
 
 #endif

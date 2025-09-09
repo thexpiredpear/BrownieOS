@@ -86,10 +86,18 @@ enum {
     LAPIC_X2APIC = 9
 };
 
+// Parses the MADT (APIC) records copied by ACPI init: enumerates LAPICs,
+// IOAPICs, interrupt source overrides, and caches the LAPIC/IOAPIC addresses
+// and IDs for later APIC/IOAPIC initialization.
 void parse_madt();
 
+// Returns the discovered number of processors (enabled LAPIC entries).
 uint8_t get_num_procs();
+// Returns a kernel virtual pointer to the array of discovered LAPIC IDs.
 uint8_t* get_lapic_ids();
+// Returns the physical address of the LAPIC MMIO base from MADT.
 uint32_t get_lapic_addr();
+// Returns the physical address of the IOAPIC MMIO base from MADT.
 uint32_t get_ioapic_addr();
+// Returns a kernel virtual pointer to the cached IOAPIC ISO entries.
 ioapic_iso_t* get_iso_entries();

@@ -145,29 +145,49 @@ struct fadt {
 
 typedef struct fadt fadt_t;
 
+// Locates the ACPI RSDP in physical memory (e.g., EBDA/BIOS areas), validates
+// its checksum, and copies it into kernel memory for later access.
 void find_rsdp(void);
 
+// Maps and copies the RSDT (ACPI < 2.0) or XSDT (>= 2.0) into kernel memory,
+// verifying the ACPI table checksum. Chooses structure based on RSDP revision.
 void find_rsdt_xsdt(void);
 
+// Searches the RSDT/XSDT for a table with the provided 4-character signature
+// (e.g., "APIC", "HPET"). Returns a KERNEL virtual address of a mapped source
+// table suitable for copying, or 0 if not found.
 uint32_t find_table(char*);
 
+// Verifies the RSDP checksum (20 bytes for v1.0, 36 for >= v2.0). Returns true
+// if the sum of all bytes modulo 256 is 0.
 bool rsdp_checksum();
+// Verifies an ACPI SDT header’s checksum across the entire table as specified
+// in the `length` field. `acpi_sdt_header_t*` is a kernel virtual pointer.
 bool acpi_sdt_checksum(acpi_sdt_header_t*);
 
+// Returns the detected ACPI version (e.g., 1 or 2+), derived from RSDP.
 int get_acpi_version(void);
 
+// Returns the kernel virtual pointer to the copied RSDP structure.
 rsdp_t* get_rsdp(void);
 
+// Returns the kernel virtual pointer to the copied RSDT (if ACPI < 2.0).
 rsdt_t* get_rsdt(void);
 
+// Returns the kernel virtual pointer to the copied XSDT (if ACPI >= 2.0).
 xsdt_t* get_xsdt(void);
 
+// Returns the kernel virtual pointer to the copied MADT (APIC) table.
 madt_t* get_madt(void);
 
+// Returns the kernel virtual pointer to the copied HPET table.
 hpet_t* get_hpet(void);
 
+// Returns the kernel virtual pointer to the copied FADT (FACP) table.
 fadt_t* get_fadt(void);
 
+// Top-level ACPI initialization: finds and validates RSDP, loads RSDT/XSDT,
+// locates and copies key tables (MADT, HPET, FADT). Must run after paging.
 void init_acpi(void);
 
 #endif

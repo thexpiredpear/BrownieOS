@@ -48,9 +48,22 @@ struct proc {
 
 typedef struct proc proc_t;
 
+// Global process table: array of pointers to process control blocks (PCBs).
+// Each `proc_t*` is a kernel virtual pointer; slots may be NULL or point to a
+// `proc_t` whose `procstate` indicates its lifecycle. Indexed by PID for now.
 extern proc_t* proc_list[MAXPROC];
+// Pointer to the currently running process’s PCB (kernel virtual pointer). May
+// be NULL during early boot or before the scheduler is initialized.
 extern proc_t* current_proc;
 
+// Initializes the process subsystem’s globals (`proc_list`, `current_proc`).
+// Does not allocate or create any processes; meant to be called at boot.
 void proc_init(void);
+// Creates and registers PID 0 as the kernel process. Sets `current_proc` and
+// points its `page_directory` at the global kernel directory (shared address space).
 void kernel_proc_init(void);
+// Creates a new user process with a private page directory cloned from the
+// kernel directory: allocates user stack pages (physical HIGHMEM) and maps them
+// into the process address space, sets initial context with `entry` (virtual).
+// Returns a kernel virtual pointer to the new `proc_t`, or NULL on failure.
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority);

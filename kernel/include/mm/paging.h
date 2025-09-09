@@ -82,26 +82,66 @@ struct page_directory {
 
 typedef struct page_directory page_directory_t;
 
+// Handles CPU exception 14 (page fault). Reads CR2 to obtain the faulting
+// linear address (virtual address), decodes the error code in the provided
+// `int_regs_t` (pushed by the ISR stub), and reports whether the fault was due
+// to not-present, write, user-mode, or reserved-bit violations. Does not return.
 void page_fault(int_regs_t*);
 
+// Marks the 4 KiB physical frame containing physical address `addr` as used in
+// the physical frame bitmap (global to the PMM). `addr` is a physical address.
 void set_frame(uint32_t addr);
+// Marks the 4 KiB physical frame containing physical address `addr` as free in
+// the physical frame bitmap (global to the PMM). `addr` is a physical address.
 void clear_frame(uint32_t addr);
+// Returns whether the 4 KiB physical frame containing physical address `addr`
+// is currently marked used in the physical frame bitmap. `addr` is physical.
 bool test_frame(uint32_t addr);
 
+// Allocates `count` contiguous 4 KiB physical frames from the global frame map.
+// Selection respects `flags` (e.g., PMM_FLAGS_HIGHMEM to prefer high memory).
+// Returns the base physical address of the first frame in the region, or 0 on
+// failure. Note this returns a physical address, not a virtual mapping.
 uint32_t alloc_pages(pmm_flags_t flags, uint32_t count);
+// Frees `count` contiguous 4 KiB physical frames starting at frame number
+// `frame` (i.e., the physical address is `frame * PAGE_SIZE`). Updates only the
+// frame bitmap; does not unmap any existing virtual mappings.
 void free_pages(uint32_t frame, uint32_t count);
 
+// Switches the active page directory by loading CR3 with the PHYSICAL address
+// of `dir` (passed as a kernel virtual pointer). Implicitly invalidates the
+// TLB as part of moving CR3. Affects all subsequent address translations.
 void swap_dir(page_directory_t* dir);
+// Invalidates the TLB for the current address space by reloading CR3 with its
+// current value. Does not modify any page structures; purely a hardware flush.
 void flush_tlb(void);
 
+// Marks a contiguous physical region [start, start+length) as reserved in the
+// frame bitmap. Rounds to page boundaries. Inputs are PHYSICAL byte addresses.
 void reserve(uint32_t start, uint32_t length);
 
+// Copies raw PTE bitfields (page_t entries) from `src` to `dest` without
+// allocating or modifying backing physical frames. Both pointers are KERNEL
+// virtual addresses to page table structures (not the hardware table address).
 void copy_page_table_entries(page_table_t* src, page_table_t* dest);
 
+// Creates a logical clone of `src` into `dest`. Kernel entries (>= KERN_START_TBL)
+// are shared by reference so they point to the same physical frames. User-space
+// entries are deep-copied: for each mapped page, a new PHYSICAL frame is
+// allocated and contents copied via a temporary kernel mapping. Both pointers
+// are kernel virtual addresses to page_directory structures.
 void clone_page_dir(page_directory_t* src, page_directory_t* dest);
 
+// Writes a single page table entry `*page` (a software view of a PTE).
+// The `frame` parameter is the PHYSICAL FRAME NUMBER (i.e., physical address
+// >> 12), not a pointer. Flags control presence, writeability, and privilege.
 void set_page(page_t* page, uint32_t frame, bool present, bool rw, bool user);
 
+// Initializes the paging subsystem: installs the page-fault handler, builds the
+// kernel page directory and low-memory identity mappings (via kernel virtual
+// window), loads CR3, and reserves non-available regions from the Multiboot
+// memory map. `mbd` is a PHYSICAL pointer from the bootloader; it is adjusted
+// to a kernel virtual address internally.
 void paging_init(multiboot_info_t* mbd, uint32_t magic);
 
 

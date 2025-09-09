@@ -19,26 +19,49 @@ typedef struct ordered_array ordered_array_t;
 
 // ordered array functions
 
-// ordered_array_t init_ordered_array(uint32_t max_size);
+// Creates an ordered array backed by pre-provided memory at kernel virtual
+// address `addr` with capacity `max_size`. Initializes slots to zero and uses
+// `less_predicate` for ordering. Caller manages lifetime of backing storage.
 ordered_array_t init_ordered_array_place(void* addr, uint32_t max_size);
+// Inserts `val` into the array in order (stable insertion). Returns the index
+// where the value was inserted. Fails if the array is at maximum capacity.
 uint32_t insert_ordered_array(ordered_array_t* ordered_array, uint32_t val);
+// Removes the element at index `i`, shifting subsequent elements left by one.
+// Decrements size; does not shrink the underlying buffer.
 void remove_ordered_array(ordered_array_t* ordered_array, uint32_t i);
+// Returns the element at index `i` without removing it.
 uint32_t get_ordered_array(ordered_array_t* ordered_array, uint32_t i);
+// Returns the index of the first element equal to `val`, or 0xFFFFFFFF if not found.
 uint32_t find_ordered_array(ordered_array_t* ordered_array, uint32_t val);
 // void destroy_ordered_array(ordered_array_t* array);
 
+// Default ordering predicate for the ordered array (a < b).
 bool less_predicate(uint32_t a, uint32_t b);
+// Prints `str` padded with leading zeros up to length `len` using the kernel TTY.
 void print_with_leading_zeros(uint32_t len, char* str);
+// Triggers an interrupt vector (placeholder in current implementation).
 void trigger_interrupt(uint8_t i);
+// Intentionally dereferences NULL to trigger a page fault for testing.
 void trigger_page_fault();
+// Writes an 8-bit value to I/O `port` via the x86 `outb` instruction.
 void outb(uint16_t port, uint8_t val);
+// Reads an 8-bit value from I/O `port` via the x86 `inb` instruction.
 uint8_t inb(uint16_t port);
+// Reads a 16-bit value from I/O `port` via the x86 `inw` instruction.
 uint16_t inw(uint16_t port);
+// Clears the interrupt flag in EFLAGS (disables maskable interrupts).
 void cli();
+// Sets the interrupt flag in EFLAGS (enables maskable interrupts).
 void sti();
+// Reads a model-specific register. `msr` is the index; returns value via `lo`/`hi`
+// pointers (kernel virtual addresses) representing the 64-bit MSR split in two.
 void get_msr(uint32_t msr, uint32_t* lo, uint32_t* hi);
+// Writes a model-specific register `msr` with the 64-bit value composed from
+// `lo` (low 32 bits) and `hi` (high 32 bits).
 void set_msr(uint32_t msr, uint32_t lo, uint32_t hi);
+// Prints a panic message and halts the CPU. Does not return.
 void panic(char* message);
+// Convenience hook for breakpoints/debugging. May emit a message or trap.
 void gdb_stop(void);
 
 enum {
