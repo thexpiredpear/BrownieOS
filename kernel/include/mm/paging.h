@@ -98,10 +98,13 @@ void clear_frame(uint32_t addr);
 // is currently marked used in the physical frame bitmap. `addr` is physical.
 bool test_frame(uint32_t addr);
 
-// Allocates `count` contiguous 4 KiB physical frames from the global frame map.
-// Selection respects `flags` (e.g., PMM_FLAGS_HIGHMEM to prefer high memory).
-// Returns the base physical address of the first frame in the region, or 0 on
-// failure. Note this returns a physical address, not a virtual mapping.
+// Allocates `count` contiguous 4 KiB physical frames and marks them used in the
+// global frame bitmap. Flags: PMM_FLAGS_DEFAULT searches only "lowmem"
+// (phys < KERN_HIGHMEM_START_TBL*PAGE_TABLE_SIZE), which the kernel identity-maps;
+// PMM_FLAGS_HIGHMEM searches only "highmem" (phys >= that boundary), intended for
+// user pages or large buffers temporarily mapped via kmap(). Returns the base
+// PHYSICAL address (PAGE_SIZE-aligned) of the first frame, or 0 on failure; no
+// virtual mapping is created.
 uint32_t alloc_pages(pmm_flags_t flags, uint32_t count);
 // Frees `count` contiguous 4 KiB physical frames starting at frame number
 // `frame` (i.e., the physical address is `frame * PAGE_SIZE`). Updates only the
