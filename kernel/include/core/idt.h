@@ -134,4 +134,7 @@ extern void irq14();
 // Hardware interrupt 15 (IRQ15, secondary ATA channel).
 extern void irq15();
 
+// Software interrupt for syscalls (int 0x80)
+extern void isr128();
+
 #endif
