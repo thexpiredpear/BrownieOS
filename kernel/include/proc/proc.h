@@ -44,6 +44,8 @@ struct proc {
     void* heap_start;
     void* stack_top;
     uint32_t stack_size;
+    void* kstack_top;   // per-process ring 0 stack top (for syscalls/IRQs)
+    uint32_t kstack_size;
 };
 
 typedef struct proc proc_t;
@@ -67,3 +69,14 @@ void kernel_proc_init(void);
 // into the process address space, sets initial context with `entry` (virtual).
 // Returns a kernel virtual pointer to the new `proc_t`, or NULL on failure.
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority);
+
+// Enters user mode for process `p`: switches to its address space, updates TSS
+// ESP0 to the process kernel stack, and iret's to user eip/esp.
+void proc_enter(proc_t* p);
+
+// Loads a minimal demo program into process `p` at 0x01000000 that calls
+// write and exit via int 0x80. Sets initial heap (brk) to end of image.
+int exec_load_demo(proc_t* p);
+
+// Assembly helper to iret into ring 3 with provided EIP/ESP/EFLAGS.
+extern void iret_to_user(uint32_t eip, uint32_t esp, uint32_t eflags);

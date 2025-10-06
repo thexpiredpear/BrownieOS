@@ -45,12 +45,16 @@ kernel/core/interrupts/isr.o \
 kernel/core/interrupts/idt.o \
 kernel/core/interrupts/apic.o \
 kernel/core/interrupts/ioapic.o \
+kernel/core/syscall.o \
 kernel/drivers/tty.o \
 kernel/drivers/pit.o \
 kernel/drivers/hpet.o \
 kernel/mm/kmm.o \
 kernel/mm/paging.o \
-kernel/mm/vmm.o
+kernel/mm/vmm.o \
+kernel/proc/proc.o \
+kernel/proc/exec.o \
+kernel/proc/usermode.o
 
 OBJS=\
 kernel/boot/crti.o \
