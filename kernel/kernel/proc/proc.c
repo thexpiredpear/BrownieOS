@@ -6,6 +6,7 @@
 #include <proc/proc.h>
 #include <mm/kmm.h>
 #include <string.h>
+#include <core/tss.h>
 
 uint32_t pid_ctr = 0;
 proc_t* current_proc;
@@ -87,7 +88,9 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     uint32_t stack_top = PROC_STACK_TOP;
     uint32_t stack_bottom = stack_top - stack_size;
 
-    uint32_t stack_pages = ((stack_top + 0xFFF) & ~0xFFF) - (stack_bottom & ~0xFFF) / PAGE_SIZE;
+    uint32_t stack_bottom_al = (stack_bottom & ~0xFFF);
+    uint32_t stack_top_al = ((stack_top + 0xFFF) & ~0xFFF);
+    uint32_t stack_pages = (stack_top_al - stack_bottom_al) / PAGE_SIZE;
     uint32_t stack_phys = alloc_pages(PMM_FLAGS_HIGHMEM, stack_pages);
 
     proc->stack_top = (void*)stack_top;
@@ -95,7 +98,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
 
     for(uint32_t i = 0;  i < stack_pages; i++) {
         uint32_t phys = stack_phys + i * PAGE_SIZE;
-        uint32_t virt = stack_bottom + i * PAGE_SIZE; // align to page size
+        uint32_t virt = stack_bottom_al + i * PAGE_SIZE; // aligned
 
         uint32_t pd_idx = PAGE_DIR_IDX(virt);
         uint32_t pt_idx = PAGE_TBL_IDX(virt);
@@ -120,8 +123,28 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     proc->context.esp = stack_top - 16; // set stack pointer to top of stack w/ some paddding
     proc->context.ebp = proc->context.esp; // set base pointer to stack pointer
 
+    // Allocate a per-process kernel stack for privilege transitions
+    proc->kstack_size = 8192; // 8 KiB
+    void* kstack_base = kmalloc(proc->kstack_size);
+    proc->kstack_top = (void*)((uint32_t)kstack_base + proc->kstack_size);
+
     proc_list[proc_idx] = proc; // Add to process list
     proc->procstate = PROC_RUNNING; // Or PROC_READY if we had a scheduler
     printf("Created process with PID %d, slot %d\n", proc->pid, proc_idx);
     return proc;
+}
+
+void proc_enter(proc_t* p) {
+    // Switch to process address space and set TSS.ESP0 to its kernel stack
+    current_proc = p;
+    tss_set_kernel_stack((uint32_t)p->kstack_top);
+    swap_dir(p->page_directory);
+
+    // Enable interrupts on entry
+    uint32_t eflags;
+    asm volatile("pushf; pop %0" : "=r"(eflags));
+    eflags |= 0x200; // IF
+
+    // Transfer to user mode at process entry point
+    iret_to_user(p->context.eip, p->context.esp, eflags);
 }
