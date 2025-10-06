@@ -81,6 +81,8 @@ void idt_set_gates() {
     idt_set_gate(45, (uint32_t)irq13, 0x08, 0b10001110);
     idt_set_gate(46, (uint32_t)irq14, 0x08, 0b10001110);
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0b10001110);
+    // User-accessible syscall gate (int 0x80)
+    idt_set_gate(128, (uint32_t)isr128, 0x08, 0b11101110); // present, ring 3, interrupt gate
 }
 
 void idt_init() {

@@ -37,6 +37,8 @@ kernel/core/gdtflush.o \
 kernel/core/gdt.o \
 kernel/core/acpi.o \
 kernel/core/madt.o \
+kernel/core/tss.o \
+kernel/core/tssload.o \
 kernel/core/interrupts/idtflush.o \
 kernel/core/interrupts/interrupt.o \
 kernel/core/interrupts/isr.o \
