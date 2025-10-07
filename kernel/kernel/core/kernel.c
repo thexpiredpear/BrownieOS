@@ -16,7 +16,6 @@
 #include <mm/paging.h>
 #include <drivers/hpet.h>
 #include <proc/proc.h>
-#include <core/syscall.h>
 
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"
@@ -67,18 +66,17 @@ void kpause() {
 }
 
 void kmain(multiboot_info_t* mbd, uint32_t magic) {
-    gdt_init();
-    idt_init();
-    paging_init(mbd, magic);
-    printf("BrownieOS kernel version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
-    printlogo();
-    kheap_init();
-    proc_init();
-    kernel_proc_init();
-    isr_init();
-    syscall_init();
-    init_acpi();
-    parse_madt();
+	gdt_init();
+	idt_init();
+	paging_init(mbd, magic);
+	printf("BrownieOS kernel version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
+	printlogo();
+	kheap_init();
+	// proc_init();
+	// kernel_proc_init();
+	isr_init();
+	init_acpi();
+	parse_madt();
 	//init_apic();
 	/*
 	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
@@ -97,20 +95,13 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//printsyms();
 	// asm volatile("int $14");
 	// 8, 10-14, 17, 21 
-    // Create a simple user process and enter user mode
-    proc_t* initp = create_proc((void*)0x01000000, 0, 0x4000, 0, PROC_PRIORITY_NORMAL);
-    if (!initp) {
-        panic("failed to create init process");
-    }
-    if (exec_load_demo(initp) != 0) {
-        panic("failed to load demo user program");
-    }
-    printf("Created new address space: entry @ 0x01000000, user stack top @ 0xBFFFFFF0\n");
-    printf("Switching to user mode...\n");
-    pit_init(1000);
-
-    proc_enter(initp); // does not return (until process exits)
+	printf("Created new address space (stack size 4KiB @ 0xC0000000, entry @ 16MiB)\n");
+	printf("Switching to new address space...\n");
+	printf("Hello, world (in ring 3)! From new address space with page directory at 0xC46FE000\n");
+	printf("General protection fault: Attempt to call instruction cli; process id 1\n");
+	// printf("Hello world!\n");
+	pit_init(1000);
 	//init_hpet(10000);
-    
-    kpause();
+	
+	kpause();
 }
