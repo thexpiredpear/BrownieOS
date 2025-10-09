@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <mm/paging.h>
 #include <core/common.h>
+#include <core/isr.h>
 
 #define MAXPROC 64
 #define PROC_STACK_TOP 0xBFFFFFF0
@@ -79,6 +80,10 @@ void proc_init(void);
 // Creates and registers PID 0 as the kernel process. Sets `current_proc` and
 // points its `page_directory` at the global kernel directory (shared address space).
 void kernel_proc_init(void);
+// Placeholder scheduler bootstrap (to be implemented); prepares run queue state.
+void scheduler_init(void);
+void scheduler_save_current_context(const int_regs_t* regs);
+void scheduler_prepare_switch(proc_t* next_proc, int_regs_t* regs);
 // Creates a new user process with a private page directory cloned from the
 // kernel directory: allocates user stack pages (physical HIGHMEM) and maps them
 // into the process address space, sets initial context with `entry` (virtual).
@@ -89,3 +94,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
 // space, updating TSS.ESP0 to its kernel stack, and executing an iret path.
 // Requires that `p->context` is initialized appropriately.
 void proc_enter(proc_t* p);
+
+// Helpers for converting between interrupt register frames and stored contexts.
+void proc_context_from_regs(proc_context_t* dest, const int_regs_t* src);
+void proc_context_to_regs(int_regs_t* dest, const proc_context_t* src);

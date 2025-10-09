@@ -72,34 +72,13 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	printf("BrownieOS kernel version %s for %s\n\n", KERNEL_VERSION, KERNEL_ARCH);
 	printlogo();
 	kheap_init();
-	// proc_init();
-	// kernel_proc_init();
+	proc_init();
+	kernel_proc_init();
+	scheduler_init();
 	isr_init();
 	init_acpi();
 	parse_madt();
 	//init_apic();
-	/*
-	uint32_t max_is_a_nerd_a = (uint32_t)kmalloc(0x1000);
-
-"	uint32_t max_is_a_nerd_b = (uint32_t)kmalloc(0x400000);
-	printf("\nkmalloc: %x\n", max_is_a_nerd_a);
-	printf("kmalloc: %x\n\n", max_is_a_nerd_b);
-	print_kheap();
-	printf("\nkfree: %x\n\n", max_is_a_nerd_a);
-	kfree((void*)max_is_a_nerd_a);
-	print_kheap();
-	printf("\nkfree: %x\n\n", max_is_a_nerd_b);
-	kfree((void*)max_is_a_nerd_b);
-	*/
-	//print_kheap();
-	//printsyms();
-	// asm volatile("int $14");
-	// 8, 10-14, 17, 21 
-	printf("Created new address space (stack size 4KiB @ 0xC0000000, entry @ 16MiB)\n");
-	printf("Switching to new address space...\n");
-	printf("Hello, world (in ring 3)! From new address space with page directory at 0xC46FE000\n");
-	printf("General protection fault: Attempt to call instruction cli; process id 1\n");
-	// printf("Hello world!\n");
 	pit_init(1000);
 	//init_hpet(10000);
 	

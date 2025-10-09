@@ -38,7 +38,13 @@ void kernel_proc_init(void) {
 
     proc_list[kernel_proc->pid] = kernel_proc;
     current_proc = kernel_proc;
+#ifdef PROC_DEBUG
     printf("Kernel process initialized with PID %d\n", kernel_proc->pid);
+#endif
+}
+
+void scheduler_init(void) {
+    // Scheduler will populate run queues in a later task.
 }
 
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority) {
@@ -137,7 +143,9 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
 
     proc_list[proc_idx] = proc; // Add to process list
     proc->procstate = PROC_RUNNING; // Or PROC_READY if we had a scheduler
+#ifdef PROC_DEBUG
     printf("Created process with PID %d, slot %d\n", proc->pid, proc_idx);
+#endif
     return proc;
 }
 
@@ -154,4 +162,62 @@ void proc_enter(proc_t* p) {
 
     // Transfer to user mode at process entry point
     iret_to_user(p->context.eip, p->context.esp, eflags);
+}
+
+void proc_context_from_regs(proc_context_t* dest, const int_regs_t* src) {
+    if (!dest || !src) {
+        return;
+    }
+
+    dest->edi = src->edi;
+    dest->esi = src->esi;
+    dest->ebp = src->ebp;
+    dest->esp = src->esp;
+    dest->ebx = src->ebx;
+    dest->edx = src->edx;
+    dest->ecx = src->ecx;
+    dest->eax = src->eax;
+
+    dest->eip = src->eip;
+    dest->eflags = src->eflags;
+    dest->cs = src->cs;
+    dest->useresp = src->useresp;
+    dest->ss = src->ss;
+}
+
+void proc_context_to_regs(int_regs_t* dest, const proc_context_t* src) {
+    if (!dest || !src) {
+        return;
+    }
+
+    dest->edi = src->edi;
+    dest->esi = src->esi;
+    dest->ebp = src->ebp;
+    dest->esp = src->esp;
+    dest->ebx = src->ebx;
+    dest->edx = src->edx;
+    dest->ecx = src->ecx;
+    dest->eax = src->eax;
+
+    dest->eip = src->eip;
+    dest->eflags = src->eflags;
+    dest->cs = src->cs;
+    dest->useresp = src->useresp;
+    dest->ss = src->ss;
+}
+
+void scheduler_save_current_context(const int_regs_t* regs) {
+    if (!regs || !current_proc) {
+        return;
+    }
+
+    proc_context_from_regs(&current_proc->context, regs);
+}
+
+void scheduler_prepare_switch(proc_t* next_proc, int_regs_t* regs) {
+    if (!next_proc || !regs) {
+        return;
+    }
+
+    proc_context_to_regs(regs, &next_proc->context);
 }
