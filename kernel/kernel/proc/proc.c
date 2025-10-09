@@ -84,6 +84,8 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     memset(proc->page_directory, 0, PAGE_SIZE * 2); // Clear the allocated pages
 
     clone_page_dir(kernel_directory, proc->page_directory);
+    // Cache CR3 (physical address of page directory) for potential fast switches
+    proc->cr3 = KV2P(proc->page_directory);
 
     uint32_t stack_top = PROC_STACK_TOP;
     uint32_t stack_bottom = stack_top - stack_size;
@@ -120,12 +122,17 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     }
 
     proc->context.eip = (uint32_t)entry;
-    proc->context.esp = stack_top - 16; // set stack pointer to top of stack w/ some paddding
+    proc->context.esp = stack_top - 16; // kernel ESP snapshot not used for user entry
     proc->context.ebp = proc->context.esp; // set base pointer to stack pointer
+    // Initialize user-mode iret frame fields for future use
+    proc->context.useresp = stack_top - 16; // initial user-mode stack pointer
+    proc->context.cs = 0x1B; // User mode code selector (GDT index 3 | RPL=3)
+    proc->context.ss = 0x23; // User mode data selector (GDT index 4 | RPL=3)
 
     // Allocate a per-process kernel stack for privilege transitions
     proc->kstack_size = 8192; // 8 KiB
     void* kstack_base = kmalloc(proc->kstack_size);
+    proc->kstack_base = kstack_base;
     proc->kstack_top = (void*)((uint32_t)kstack_base + proc->kstack_size);
 
     proc_list[proc_idx] = proc; // Add to process list

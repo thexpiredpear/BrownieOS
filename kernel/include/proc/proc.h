@@ -7,9 +7,18 @@
 #define MAXPROC 64
 #define PROC_STACK_TOP 0xBFFFFFF0
 
+// Saved CPU context/trap frame used for process resumes and initial user entry.
+// Matches the ordering established by `interrupt.S` for PUSHAL + ISR pushes
+// and the CPU-pushed iret frame. Note: the `esp` within the PUSHAD block is
+// the KERNEL esp at interrupt time; `useresp`/`ss` are only present for CPL3
+// -> CPL0 transitions (user->kernel interrupts) and for user-mode iret frames.
 struct context {
+    // PUSHAD-saved general purpose registers (top of frame first)
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    // CPU iret frame
     uint32_t eip, cs, eflags;
+    uint32_t useresp; // only valid when transitioning to/from ring 3
+    uint32_t ss;      // only valid when transitioning to/from ring 3
 } __attribute__((packed));
 
 typedef struct context proc_context_t;
@@ -44,6 +53,14 @@ struct proc {
     void* heap_start;
     void* stack_top;
     uint32_t stack_size;
+    // Per-process kernel stack used on privilege elevation (TSS.ESP0)
+    void* kstack_top;
+    uint32_t kstack_size;
+    void* kstack_base;
+    // Cached CR3 value (physical address of page directory) for fast context switches
+    uint32_t cr3;
+    // Simple forward link for run queues (placeholder for future scheduler)
+    struct proc* run_next;
 };
 
 typedef struct proc proc_t;
@@ -67,3 +84,8 @@ void kernel_proc_init(void);
 // into the process address space, sets initial context with `entry` (virtual).
 // Returns a kernel virtual pointer to the new `proc_t`, or NULL on failure.
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority);
+
+// Transfers control to user mode for process `p` by switching to its address
+// space, updating TSS.ESP0 to its kernel stack, and executing an iret path.
+// Requires that `p->context` is initialized appropriately.
+void proc_enter(proc_t* p);
