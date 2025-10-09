@@ -50,7 +50,9 @@ kernel/drivers/pit.o \
 kernel/drivers/hpet.o \
 kernel/mm/kmm.o \
 kernel/mm/paging.o \
-kernel/mm/vmm.o
+kernel/mm/vmm.o \
+kernel/proc/proc.o \
+kernel/proc/enter_user.o
 
 OBJS=\
 kernel/boot/crti.o \

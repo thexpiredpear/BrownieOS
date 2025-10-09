@@ -95,6 +95,10 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
 // Requires that `p->context` is initialized appropriately.
 void proc_enter(proc_t* p);
 
+// Low-level iret jump to user mode using the provided saved context.
+// Does not return. Implemented in assembly.
+__attribute__((noreturn)) void iret_jump_user(proc_context_t* ctx);
+
 // Helpers for converting between interrupt register frames and stored contexts.
 void proc_context_from_regs(proc_context_t* dest, const int_regs_t* src);
 void proc_context_to_regs(int_regs_t* dest, const proc_context_t* src);

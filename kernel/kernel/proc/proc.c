@@ -160,8 +160,11 @@ void proc_enter(proc_t* p) {
     asm volatile("pushf; pop %0" : "=r"(eflags));
     eflags |= 0x200; // IF
 
-    // Transfer to user mode at process entry point
-    iret_to_user(p->context.eip, p->context.esp, eflags);
+    // Stash desired EFLAGS into context and transfer using assembly stub
+    p->context.eflags = eflags;
+
+    // Transfer to user mode using iret frame from saved context
+    iret_jump_user(&p->context);
 }
 
 void proc_context_from_regs(proc_context_t* dest, const int_regs_t* src) {
