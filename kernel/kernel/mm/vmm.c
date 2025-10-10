@@ -8,7 +8,7 @@ extern page_directory_t* kernel_directory;
 void* kmap(uint32_t paddr) {
     if(paddr == 0) {
         return NULL;
-    } else if(paddr < 0x40000000) {
+    } else if(paddr < KERN_IDENTITY_PHYS_END) {
         return (void*)KP2V(paddr);
     } else {
         page_directory_t* dir = kernel_directory;
@@ -23,6 +23,7 @@ void* kmap(uint32_t paddr) {
             }
         }
     }
+    return NULL;
 }
 
 void kunmap(void* vaddr) {

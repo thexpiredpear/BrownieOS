@@ -11,6 +11,7 @@
 #define EOM (0xFFFFFFFF)
 #define KERN_START_TBL (768)
 #define KERN_HIGHMEM_START_TBL (992)
+#define KERN_IDENTITY_PHYS_END ((KERN_HIGHMEM_START_TBL - KERN_START_TBL) * PAGE_TABLE_SIZE)
 
 #define PAGE_FAULT_PRESENT_A (0b1)
 #define PAGE_FAULT_WRITE_A (0b10)
@@ -101,8 +102,9 @@ bool test_frame(uint32_t addr);
 
 // Allocates `count` contiguous 4 KiB physical frames and marks them used in the
 // global frame bitmap. Flags: PMM_FLAGS_DEFAULT searches only "lowmem"
-// (phys < KERN_HIGHMEM_START_TBL*PAGE_TABLE_SIZE), which the kernel identity-maps;
-// PMM_FLAGS_HIGHMEM searches only "highmem" (phys >= that boundary), intended for
+// (phys < KERN_IDENTITY_PHYS_END), which the kernel identity-maps;
+// PMM_FLAGS_HIGHMEM searches only "highmem" (phys >= that boundary), intended
+// for
 // user pages or large buffers temporarily mapped via kmap(). Returns the base
 // PHYSICAL address (PAGE_SIZE-aligned) of the first frame, or 0 on failure; no
 // virtual mapping is created.

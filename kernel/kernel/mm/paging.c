@@ -63,12 +63,18 @@ bool test_frame(uint32_t addr) {
 
 
 uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
+    // Physical address range split:
+    // - Lowmem (identity-mapped by the kernel): [0, identity_phys_end)
+    // - Highmem (requires temporary mapping via kmap): [identity_phys_end, EOM]
+    const uint32_t identity_phys_end = KERN_IDENTITY_PHYS_END; // 896 MiB
     uint32_t paddr = 0;
     uint32_t end = EOM;
     if(flags & PMM_FLAGS_HIGHMEM) {
-        paddr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
+        // Start allocating at the first page beyond the identity-mapped region
+        paddr = identity_phys_end;
     } else {
-        end = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE - 1;
+        // Constrain search to identity-mapped low memory
+        end = identity_phys_end;
     }
     for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
         if(!test_frame(paddr)) {
