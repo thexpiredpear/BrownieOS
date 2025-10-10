@@ -21,15 +21,19 @@ void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
     uint32_t addr;
     asm volatile("mov %%cr2, %0" : "=r" (addr));
-    bool present = registers->err_code & PAGE_FAULT_PRESENT_A;
+    bool protection_violation = registers->err_code & PAGE_FAULT_PRESENT_A;
     bool write = registers->err_code & PAGE_FAULT_WRITE_A;
     bool user = registers->err_code & PAGE_FAULT_USER_A;
     bool reserved = registers->err_code & PAGE_FAULT_RESERVED_A;
+    bool instruction = registers->err_code & PAGE_FAULT_INSTR_FETCH_A;
     printf("addr: %x\n", addr);
-    printf("present: %d\n", present);
-    printf("write: %d\n", write);
-    printf("user: %d\n", user);
-    printf("reserved: %d\n", reserved);
+    printf("page-protection violation (1=protection,0=non-present): %d\n", protection_violation);
+    printf("caused by write access: %d\n", write);
+    printf("originated from user mode: %d\n", user);
+    printf("reserved-bit set in entry: %d\n", reserved);
+    printf("instruction fetch: %d\n", instruction);
+    printf("eip: %x cs: %x\n", registers->eip, registers->cs);
+    printf("esp: %x useresp: %x ss: %x\n", registers->esp, registers->useresp, registers->ss);
     panic("page fault");
 } __attribute__((noreturn));
 

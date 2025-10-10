@@ -16,6 +16,7 @@
 #define PAGE_FAULT_WRITE_A (0b10)
 #define PAGE_FAULT_USER_A (0b100)
 #define PAGE_FAULT_RESERVED_A (0b1000)
+#define PAGE_FAULT_INSTR_FETCH_A (0b10000)
 
 #define PAGE_FRAME(x) ((x) / 0x1000)
 #define PAGE_FRAME_BITMAP_IDX(x) ((x) / 8)
