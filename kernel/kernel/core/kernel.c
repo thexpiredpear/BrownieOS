@@ -8,6 +8,7 @@
 #include <core/idt.h>
 #include <drivers/pit.h>
 #include <core/isr.h>
+#include <core/syscall.h>
 #include <core/acpi.h>
 #include <core/madt.h>
 #include <core/apic.h>
@@ -128,6 +129,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	kernel_proc_init();
 	scheduler_init();
 	isr_init();
+	syscall_init();
 	init_acpi();
 	parse_madt();
 	//init_apic();

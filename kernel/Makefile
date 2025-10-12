@@ -33,6 +33,7 @@ KERNEL_OBJS=\
 kernel/boot/crt0.o \
 kernel/core/kernel.o \
 kernel/core/common.o \
+kernel/core/syscall.o \
 kernel/core/gdtflush.o \
 kernel/core/gdt.o \
 kernel/core/acpi.o \
