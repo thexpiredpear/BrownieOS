@@ -47,6 +47,57 @@ void scheduler_init(void) {
     // Scheduler will populate run queues in a later task.
 }
 
+int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, bool writable) {
+    if (!proc || !proc->page_directory || page_count == 0) {
+        return -1;
+    }
+
+    page_directory_t* dir = proc->page_directory;
+
+    for (uint32_t i = 0; i < page_count; i++) {
+        uint32_t virt = virt_base + (i * PAGE_SIZE);
+        uint32_t phys = phys_base + (i * PAGE_SIZE);
+
+        uint32_t pd_idx = PAGE_DIR_IDX(virt);
+        uint32_t pt_idx = PAGE_TBL_IDX(virt);
+
+        page_dir_entry_t* entry = &dir->page_dir_entries[pd_idx];
+        page_table_t* table = dir->tables[pd_idx];
+
+        if (!entry->present) {
+            uint32_t table_phys = alloc_pages(PMM_FLAGS_DEFAULT, 1);
+            if (!table_phys) {
+                printf("proc_map_region: failed to allocate page table\n");
+                return -1;
+            }
+
+            table = (page_table_t*)KP2V(table_phys);
+            memset(table, 0, sizeof(page_table_t));
+
+            dir->tables[pd_idx] = table;
+
+            entry->present = 1;
+            entry->rw = writable ? 1 : 0;
+            entry->user = 1;
+            entry->frame = PAGE_FRAME(table_phys);
+        } else {
+            if (!table) {
+                printf("proc_map_pages: PDE present without table pointer\n");
+                return -1;
+            }
+            if (writable) {
+                entry->rw = 1;
+            }
+            entry->user = 1;
+        }
+
+        set_page(&(table->pages[pt_idx]), PAGE_FRAME(phys), true, writable, true);
+    }
+
+    flush_tlb();
+    return 0;
+}
+
 proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32_t heap_size, procpriority_t priority) {
     proc_t* proc = NULL;
     int proc_idx = -1;
@@ -104,27 +155,18 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     proc->stack_top = (void*)stack_top;
     proc->stack_size = stack_size;
 
-    for(uint32_t i = 0;  i < stack_pages; i++) {
-        uint32_t phys = stack_phys + i * PAGE_SIZE;
-        uint32_t virt = stack_bottom_al + i * PAGE_SIZE; // aligned
+    if (!stack_phys) {
+        printf("create_proc: failed to allocate stack pages\n");
+        return NULL;
+    }
 
-        uint32_t pd_idx = PAGE_DIR_IDX(virt);
-        uint32_t pt_idx = PAGE_TBL_IDX(virt);
-
-        // create page table if it doesn't exist
-        if(!proc->page_directory->page_dir_entries[pd_idx].present) {
-            page_table_t* new_table = (page_table_t*)KP2V(alloc_pages(PMM_FLAGS_DEFAULT, 1));
-            memset(new_table, 0, sizeof(page_table_t));
-            proc->page_directory->tables[pd_idx] = new_table;
-
-            proc->page_directory->page_dir_entries[pd_idx].present = 1;
-            proc->page_directory->page_dir_entries[pd_idx].rw = 1;
-            proc->page_directory->page_dir_entries[pd_idx].frame = PAGE_FRAME(KV2P((uint32_t)new_table));
-            proc->page_directory->page_dir_entries[pd_idx].user = 1;
-        }
-
-        set_page(&(proc->page_directory->tables[pd_idx]->pages[pt_idx]),
-                 PAGE_FRAME(phys), 1, 1, 1);
+    if (proc_map_region(proc,
+                        stack_bottom_al,
+                        stack_phys,
+                        stack_pages,
+                        PROC_MAP_FLAG_WRITE | PROC_MAP_FLAG_USER) != 0) {
+        printf("create_proc: failed to map stack pages\n");
+        return NULL;
     }
 
     proc->context.eip = (uint32_t)entry;

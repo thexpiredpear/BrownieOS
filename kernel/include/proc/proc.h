@@ -80,6 +80,9 @@ void proc_init(void);
 // Creates and registers PID 0 as the kernel process. Sets `current_proc` and
 // points its `page_directory` at the global kernel directory (shared address space).
 void kernel_proc_init(void);
+// Maps `pages` pages starting at `phys` to `virt` in the given process's page directory.
+// Returns 0 on success, -1 on failure.
+int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, bool writable);
 // Placeholder scheduler bootstrap (to be implemented); prepares run queue state.
 void scheduler_init(void);
 void scheduler_save_current_context(const int_regs_t* regs);
