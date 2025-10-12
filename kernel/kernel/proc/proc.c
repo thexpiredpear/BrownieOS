@@ -48,18 +48,18 @@ void scheduler_init(void) {
 }
 
 int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, bool writable) {
-    if (!proc || !proc->page_directory || page_count == 0) {
+    if (!proc || !proc->page_directory || pages == 0) {
         return -1;
     }
 
     page_directory_t* dir = proc->page_directory;
 
-    for (uint32_t i = 0; i < page_count; i++) {
-        uint32_t virt = virt_base + (i * PAGE_SIZE);
-        uint32_t phys = phys_base + (i * PAGE_SIZE);
+    for (uint32_t i = 0; i < pages; i++) {
+        uint32_t virt_addr = virt + (i * PAGE_SIZE);
+        uint32_t phys_addr = phys + (i * PAGE_SIZE);
 
-        uint32_t pd_idx = PAGE_DIR_IDX(virt);
-        uint32_t pt_idx = PAGE_TBL_IDX(virt);
+        uint32_t pd_idx = PAGE_DIR_IDX(virt_addr);
+        uint32_t pt_idx = PAGE_TBL_IDX(virt_addr);
 
         page_dir_entry_t* entry = &dir->page_dir_entries[pd_idx];
         page_table_t* table = dir->tables[pd_idx];
@@ -67,7 +67,7 @@ int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, b
         if (!entry->present) {
             uint32_t table_phys = alloc_pages(PMM_FLAGS_DEFAULT, 1);
             if (!table_phys) {
-                printf("proc_map_region: failed to allocate page table\n");
+                printf("proc_map_pages: failed to allocate page table\n");
                 return -1;
             }
 
@@ -77,7 +77,7 @@ int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, b
             dir->tables[pd_idx] = table;
 
             entry->present = 1;
-            entry->rw = writable ? 1 : 0;
+            entry->rw = 1;
             entry->user = 1;
             entry->frame = PAGE_FRAME(table_phys);
         } else {
@@ -91,7 +91,7 @@ int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, b
             entry->user = 1;
         }
 
-        set_page(&(table->pages[pt_idx]), PAGE_FRAME(phys), true, writable, true);
+        set_page(&(table->pages[pt_idx]), PAGE_FRAME(phys_addr), true, writable, true);
     }
 
     flush_tlb();
@@ -160,11 +160,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
         return NULL;
     }
 
-    if (proc_map_region(proc,
-                        stack_bottom_al,
-                        stack_phys,
-                        stack_pages,
-                        PROC_MAP_FLAG_WRITE | PROC_MAP_FLAG_USER) != 0) {
+    if (proc_map_pages(proc, stack_bottom_al, stack_phys, stack_pages, true) != 0) {
         printf("create_proc: failed to map stack pages\n");
         return NULL;
     }

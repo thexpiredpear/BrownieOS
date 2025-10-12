@@ -27,40 +27,6 @@ static const uint8_t user_priv_test_code[] = {
     0xEB, 0xFE  // jmp $ to avoid falling through if instruction ever succeeded
 };
 
-static int map_single_user_page(uint32_t virt, uint32_t phys, bool writable) {
-    uint32_t dir_idx = PAGE_DIR_IDX(virt);
-    uint32_t tbl_idx = PAGE_TBL_IDX(virt);
-
-    page_dir_entry_t* entry = &kernel_directory->page_dir_entries[dir_idx];
-    page_table_t* table = kernel_directory->tables[dir_idx];
-
-    if(!entry->present) {
-        uint32_t table_phys = alloc_pages(PMM_FLAGS_DEFAULT, 1);
-        if(!table_phys) {
-            printf("iret test: failed to allocate page table\n");
-            return -1;
-        }
-        table = (page_table_t*)KP2V(table_phys);
-        memset(table, 0, sizeof(page_table_t));
-
-        kernel_directory->tables[dir_idx] = table;
-        entry->present = 1;
-        entry->rw = 1;
-        entry->user = 1;
-        entry->frame = PAGE_FRAME(table_phys);
-    } else {
-        if(!table) {
-            printf("iret test: PDE present without table pointer\n");
-            return -1;
-        }
-        entry->user = 1;
-        entry->rw = 1;
-    }
-
-    set_page(&table->pages[tbl_idx], PAGE_FRAME(phys), true, writable, true);
-    return 0;
-}
-
 static void run_iret_privilege_smoke(void) {
     static proc_context_t user_ctx;
     const uint32_t user_stack_base = USER_TEST_STACK_TOP - PAGE_SIZE;
@@ -73,11 +39,11 @@ static void run_iret_privilege_smoke(void) {
         return;
     }
 
-    if(map_single_user_page(USER_TEST_CODE_VA, code_phys, true) != 0) {
+    if(proc_map_pages(current_proc, USER_TEST_CODE_VA, code_phys, 1, true) != 0) {
         return;
     }
 
-    if(map_single_user_page(user_stack_base, stack_phys, true) != 0) {
+    if(proc_map_pages(current_proc, user_stack_base, stack_phys, 1, true) != 0) {
         return;
     }
 
