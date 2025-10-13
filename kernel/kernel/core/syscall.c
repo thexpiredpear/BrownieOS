@@ -9,10 +9,7 @@
 #include <proc/proc.h>
 #include <mm/paging.h>
 
-static syscall_handler_t syscall_table[SYSCALL_MAX];
-
-static void syscall_dispatch(int_regs_t* regs);
-static void sys_print_string(int_regs_t* regs);
+syscall_handler_t syscall_table[SYSCALL_MAX];
 
 bool user_addr_accessible(const proc_t* proc, uint32_t addr) {
     if(proc == NULL || proc->page_directory == NULL) {
@@ -138,6 +135,7 @@ void sys_print_string(int_regs_t* regs) {
         return;
     }
 
-    printf("[%u] %s\n", current_proc->pid, buffer);
+    //printf("[%u] %s\n", current_proc->pid, buffer);
+    printf("%s\n", buffer);
     regs->eax = (uint32_t)SYSCALL_SUCCESS;
 }

@@ -19,28 +19,32 @@
 #include <proc/proc.h>
 
 #define USER_TEST_CODE_VA   0x00400000
-#define USER_TEST_STACK_TOP 0x00402000
+#define USER_TEST_DATA_VA   0x00401000
+#define USER_TEST_STACK_TOP 0x00403000
 
 extern page_directory_t* kernel_directory;
 
-static const uint8_t user_priv_test_code[] = {
-    0xFA,       // cli (privileged; should trigger #GP in CPL3)
-    0xEB, 0xFE  // jmp $ to avoid falling through if instruction ever succeeded
-};
+static const char user_test_message[] = "hello world";
+static const size_t user_test_message_len = sizeof(user_test_message);
 
 static void run_iret_privilege_smoke(void) {
     static proc_context_t user_ctx;
     const uint32_t user_stack_base = USER_TEST_STACK_TOP - PAGE_SIZE;
 
     uint32_t code_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
+    uint32_t data_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
     uint32_t stack_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
 
-    if(!code_phys || !stack_phys) {
+    if(!code_phys || !data_phys || !stack_phys) {
         printf("iret test: failed to allocate user pages\n");
         return;
     }
 
     if(proc_map_pages(current_proc, USER_TEST_CODE_VA, code_phys, 1, true) != 0) {
+        return;
+    }
+
+    if(proc_map_pages(current_proc, USER_TEST_DATA_VA, data_phys, 1, true) != 0) {
         return;
     }
 
@@ -51,8 +55,27 @@ static void run_iret_privilege_smoke(void) {
     flush_tlb();
 	// fill page with NOP
     memset((void*)USER_TEST_CODE_VA, 0x90, PAGE_SIZE);
-	// insert privileged instruction test code
-    memcpy((void*)USER_TEST_CODE_VA, user_priv_test_code, sizeof(user_priv_test_code));
+    uint8_t* code_ptr = (uint8_t*)USER_TEST_CODE_VA;
+    size_t idx = 0;
+    code_ptr[idx++] = 0xB8; // mov eax, imm32
+    uint32_t imm = SYS_PRINT_STRING;
+    memcpy(&code_ptr[idx], &imm, sizeof(imm));
+    idx += sizeof(imm);
+    code_ptr[idx++] = 0xBB; // mov ebx, imm32
+    imm = USER_TEST_DATA_VA;
+    memcpy(&code_ptr[idx], &imm, sizeof(imm));
+    idx += sizeof(imm);
+    code_ptr[idx++] = 0xB9; // mov ecx, imm32
+    imm = (uint32_t)user_test_message_len;
+    memcpy(&code_ptr[idx], &imm, sizeof(imm));
+    idx += sizeof(imm);
+    code_ptr[idx++] = 0xCD;
+    code_ptr[idx++] = 0x80; // int 0x80
+    code_ptr[idx++] = 0xEB;
+    code_ptr[idx++] = 0xFE; // jmp $
+
+    memset((void*)USER_TEST_DATA_VA, 0, PAGE_SIZE);
+    memcpy((void*)USER_TEST_DATA_VA, user_test_message, user_test_message_len);
 	// clear user stack
     memset((void*)user_stack_base, 0, PAGE_SIZE);
 
@@ -65,9 +88,9 @@ static void run_iret_privilege_smoke(void) {
     user_ctx.esp = user_ctx.useresp;
     user_ctx.ebp = user_ctx.useresp;
 
-    printf("Running privileged instruction smoke-test via iret trampoline...\n");
+    printf("Running user-mode syscall demo via iret trampoline...\n");
     iret_jump_user(&user_ctx);
-    printf("iret test: returned unexpectedly from user mode\n");
+    printf("syscall demo: returned unexpectedly from user mode\n");
 }
 
 #ifndef KERNEL_VERSION

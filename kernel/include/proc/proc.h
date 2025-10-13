@@ -1,3 +1,6 @@
+#ifndef _KERNEL_PROC_H
+#define _KERNEL_PROC_H 1
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -105,3 +108,5 @@ __attribute__((noreturn)) void iret_jump_user(proc_context_t* ctx);
 // Helpers for converting between interrupt register frames and stored contexts.
 void proc_context_from_regs(proc_context_t* dest, const int_regs_t* src);
 void proc_context_to_regs(int_regs_t* dest, const proc_context_t* src);
+
+#endif

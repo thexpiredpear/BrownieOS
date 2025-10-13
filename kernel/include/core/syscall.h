@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <core/isr.h>
+#include <proc/proc.h>
 
 // Software interrupt vector reserved for syscalls (int 0x80).
 #define SYSCALL_VECTOR (0x80)
@@ -15,6 +16,8 @@
 
 // Temporary syscall numbers for MVP userland interactions.
 #define SYS_PRINT_STRING (0x1)
+
+#define SYS_PRINT_STRING_MAX_LEN (256)
 
 typedef void (*syscall_handler_t)(int_regs_t* regs);
 
