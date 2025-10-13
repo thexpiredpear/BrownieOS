@@ -24,10 +24,13 @@
 
 extern page_directory_t* kernel_directory;
 
-static const char user_test_message[] = "hello world";
-static const size_t user_test_message_len = sizeof(user_test_message);
+enum { USER_TEST_MESSAGE_COUNT = 2 };
+static const char* const user_test_messages[USER_TEST_MESSAGE_COUNT] = {
+    "[0] hello world from a process",
+    "[1] hello world from another process",
+};
 
-static void run_iret_privilege_smoke(void) {
+static void kernel_process_test(void) {
     static proc_context_t user_ctx;
     const uint32_t user_stack_base = USER_TEST_STACK_TOP - PAGE_SIZE;
 
@@ -57,25 +60,48 @@ static void run_iret_privilege_smoke(void) {
     memset((void*)USER_TEST_CODE_VA, 0x90, PAGE_SIZE);
     uint8_t* code_ptr = (uint8_t*)USER_TEST_CODE_VA;
     size_t idx = 0;
-    code_ptr[idx++] = 0xB8; // mov eax, imm32
-    uint32_t imm = SYS_PRINT_STRING;
-    memcpy(&code_ptr[idx], &imm, sizeof(imm));
-    idx += sizeof(imm);
-    code_ptr[idx++] = 0xBB; // mov ebx, imm32
-    imm = USER_TEST_DATA_VA;
-    memcpy(&code_ptr[idx], &imm, sizeof(imm));
-    idx += sizeof(imm);
-    code_ptr[idx++] = 0xB9; // mov ecx, imm32
-    imm = (uint32_t)user_test_message_len;
-    memcpy(&code_ptr[idx], &imm, sizeof(imm));
-    idx += sizeof(imm);
-    code_ptr[idx++] = 0xCD;
-    code_ptr[idx++] = 0x80; // int 0x80
+
+    uint32_t data_offsets[USER_TEST_MESSAGE_COUNT];
+    size_t message_lengths[USER_TEST_MESSAGE_COUNT];
+    uint32_t data_cursor = 0;
+
+    memset((void*)USER_TEST_DATA_VA, 0, PAGE_SIZE);
+    for (size_t i = 0; i < USER_TEST_MESSAGE_COUNT; ++i) {
+        const char* msg = user_test_messages[i];
+        size_t len = strlen(msg);
+        message_lengths[i] = len;
+        data_offsets[i] = data_cursor;
+
+        char* dest = (char*)(USER_TEST_DATA_VA + data_cursor);
+        memcpy(dest, msg, len);
+        dest[len] = '\0';
+
+        data_cursor += (uint32_t)(len + 1);
+    }
+
+    for (size_t i = 0; i < USER_TEST_MESSAGE_COUNT; ++i) {
+        uint32_t imm = SYS_PRINT_STRING;
+        code_ptr[idx++] = 0xB8; // mov eax, imm32
+        memcpy(&code_ptr[idx], &imm, sizeof(imm));
+        idx += sizeof(imm);
+
+        imm = USER_TEST_DATA_VA + data_offsets[i];
+        code_ptr[idx++] = 0xBB; // mov ebx, imm32
+        memcpy(&code_ptr[idx], &imm, sizeof(imm));
+        idx += sizeof(imm);
+
+        imm = (uint32_t)message_lengths[i];
+        code_ptr[idx++] = 0xB9; // mov ecx, imm32
+        memcpy(&code_ptr[idx], &imm, sizeof(imm));
+        idx += sizeof(imm);
+
+        code_ptr[idx++] = 0xCD;
+        code_ptr[idx++] = 0x80; // int 0x80
+    }
+
     code_ptr[idx++] = 0xEB;
     code_ptr[idx++] = 0xFE; // jmp $
 
-    memset((void*)USER_TEST_DATA_VA, 0, PAGE_SIZE);
-    memcpy((void*)USER_TEST_DATA_VA, user_test_message, user_test_message_len);
 	// clear user stack
     memset((void*)user_stack_base, 0, PAGE_SIZE);
 
@@ -159,6 +185,6 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	pit_init(1000);
 	//init_hpet(10000);
 	
-	run_iret_privilege_smoke();
+	kernel_process_test();
 	kpause();
 }
