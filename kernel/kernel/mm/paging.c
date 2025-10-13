@@ -21,15 +21,19 @@ void page_fault(int_regs_t* registers) {
     printf("page fault!\n");
     uint32_t addr;
     asm volatile("mov %%cr2, %0" : "=r" (addr));
-    bool present = registers->err_code & PAGE_FAULT_PRESENT_A;
+    bool protection_violation = registers->err_code & PAGE_FAULT_PRESENT_A;
     bool write = registers->err_code & PAGE_FAULT_WRITE_A;
     bool user = registers->err_code & PAGE_FAULT_USER_A;
     bool reserved = registers->err_code & PAGE_FAULT_RESERVED_A;
+    bool instruction = registers->err_code & PAGE_FAULT_INSTR_FETCH_A;
     printf("addr: %x\n", addr);
-    printf("present: %d\n", present);
-    printf("write: %d\n", write);
-    printf("user: %d\n", user);
-    printf("reserved: %d\n", reserved);
+    printf("page-protection violation (1=protection,0=non-present): %d\n", protection_violation);
+    printf("caused by write access: %d\n", write);
+    printf("originated from user mode: %d\n", user);
+    printf("reserved-bit set in entry: %d\n", reserved);
+    printf("instruction fetch: %d\n", instruction);
+    printf("eip: %x cs: %x\n", registers->eip, registers->cs);
+    printf("esp: %x useresp: %x ss: %x\n", registers->esp, registers->useresp, registers->ss);
     panic("page fault");
 } __attribute__((noreturn));
 
@@ -59,12 +63,18 @@ bool test_frame(uint32_t addr) {
 
 
 uint32_t alloc_pages(pmm_flags_t flags, uint32_t count) {
+    // Physical address range split:
+    // - Lowmem (identity-mapped by the kernel): [0, identity_phys_end)
+    // - Highmem (requires temporary mapping via kmap): [identity_phys_end, EOM]
+    const uint32_t identity_phys_end = KERN_IDENTITY_PHYS_END; // 896 MiB
     uint32_t paddr = 0;
     uint32_t end = EOM;
     if(flags & PMM_FLAGS_HIGHMEM) {
-        paddr = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE;    
+        // Start allocating at the first page beyond the identity-mapped region
+        paddr = identity_phys_end;
     } else {
-        end = KERN_HIGHMEM_START_TBL * PAGE_TABLE_SIZE - 1;
+        // Constrain search to identity-mapped low memory
+        end = identity_phys_end;
     }
     for(uint32_t contig = 0; paddr < end; paddr += PAGE_SIZE) {
         if(!test_frame(paddr)) {

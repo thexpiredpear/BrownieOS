@@ -33,6 +33,7 @@ KERNEL_OBJS=\
 kernel/boot/crt0.o \
 kernel/core/kernel.o \
 kernel/core/common.o \
+kernel/core/syscall.o \
 kernel/core/gdtflush.o \
 kernel/core/gdt.o \
 kernel/core/acpi.o \
@@ -50,7 +51,9 @@ kernel/drivers/pit.o \
 kernel/drivers/hpet.o \
 kernel/mm/kmm.o \
 kernel/mm/paging.o \
-kernel/mm/vmm.o
+kernel/mm/vmm.o \
+kernel/proc/proc.o \
+kernel/proc/enter_user.o
 
 OBJS=\
 kernel/boot/crti.o \

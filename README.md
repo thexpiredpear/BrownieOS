@@ -48,13 +48,11 @@ The shell script build.sh will create a sysroot dir which the final iso image is
         - [x] LAPIC
         - [x] IOAPIC
     - [x] HPET
-    - [ ] ~~SMP~~
-    - [ ] LAPIC Timer (?)
-    - [ ] Abstract Process
+    - [x] Abstract Userspace Process
     - [ ] Context Switch
     - [ ] Scheduler
 
-- [ ] Userspace
+- [ ] LibC expansion
 
 ## Credits
 

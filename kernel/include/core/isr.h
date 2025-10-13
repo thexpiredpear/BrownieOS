@@ -3,10 +3,17 @@
 
 #include <stdint.h>
 
+// Unified interrupt/trap frame layout used by low-level stubs in interrupt.S.
+// Ordering reflects stack memory layout at the time the C handler is called,
+// starting with the PUSHAD registers, followed by the ISR-pushed fields, and
+// finally the CPU-pushed iret frame. On privilege transitions (CPL3->CPL0),
+// the CPU also pushes `useresp` and `ss`, which are included here and valid if
+// and only if the saved `cs` indicates user mode (RPL=3).
 struct int_regs {
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // PUSHAD
-    uint32_t int_no, err_code;  // PUSHED BY ISR
-    uint32_t eip, cs, eflags; // PUSHED BY CPU
+    uint32_t int_no, err_code;                       // PUSHED BY ISR
+    uint32_t eip, cs, eflags;                        // PUSHED BY CPU (always)
+    uint32_t useresp, ss;                            // PUSHED BY CPU (only on CPL3->CPL0)
 } __attribute__((packed));
 
 typedef struct int_regs int_regs_t;
