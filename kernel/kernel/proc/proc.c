@@ -107,10 +107,6 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     for (int i = 1; i < MAXPROC; i++) {
         if (proc_list[i] == NULL || proc_list[i]->procstate == PROC_UNUSED) {
             if (proc_list[i] != NULL && proc_list[i]->procstate == PROC_UNUSED) {
-                // If a slot was previously used and is now UNUSED, free its old resources if any
-                // For now, we assume kmalloc'd proc_t is the main resource to free if re-using.
-                // More complex cleanup (page tables etc.) would go here if re-using PROC_UNUSED slots
-                // that previously held a terminated process.
                 kfree(proc_list[i]); 
             }
             proc = (proc_t*)kmalloc(sizeof(proc_t));
@@ -180,7 +176,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     proc->kstack_top = (void*)((uint32_t)kstack_base + proc->kstack_size);
 
     proc_list[proc_idx] = proc; // Add to process list
-    proc->procstate = PROC_RUNNING; // Or PROC_READY if we had a scheduler
+    proc->procstate = PROC_RUNNING; // Or PROC_READY for scheduler
 #ifdef PROC_DEBUG
     printf("Created process with PID %d, slot %d\n", proc->pid, proc_idx);
 #endif
