@@ -15,8 +15,10 @@
 #include <core/ioapic.h>
 #include <mm/kmm.h>
 #include <mm/paging.h>
+#include <mm/vmm.h>
 #include <drivers/hpet.h>
 #include <proc/proc.h>
+#include <proc/scheduler.h>
 
 #define USER_TEST_CODE_VA   0x00400000
 #define USER_TEST_DATA_VA   0x00401000
@@ -30,7 +32,7 @@ static const char* const user_test_messages[USER_TEST_MESSAGE_COUNT] = {
     "[2] hello world from another process",
 };
 
-static void kernel_process_test(void) {
+static void kernel_single_process_test(void) {
     static proc_context_t user_ctx;
     const uint32_t user_stack_base = USER_TEST_STACK_TOP - PAGE_SIZE;
 
@@ -119,6 +121,117 @@ static void kernel_process_test(void) {
     printf("syscall demo: returned unexpectedly from user mode\n");
 }
 
+// --- Two-process scheduling demo ---
+// Creates two independent user processes. Each process maps its own code and
+// data page at identical virtual addresses, prints a unique message via
+// SYS_PRINT_STRING, then spins forever. The PIT preempts from user mode and
+// the simple RR scheduler alternates execution between them.
+static proc_t* make_user_proc_with_message(const char* msg) {
+    if (!msg) return NULL;
+
+    // Prepare user code/data pages (distinct physical frames per process)
+    uint32_t code_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
+    uint32_t data_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
+    if (!code_phys || !data_phys) {
+        printf("two-proc test: failed to allocate user pages\n");
+        return NULL;
+    }
+
+    // Build the code and data via temporary kernel mappings
+    uint8_t* code_ptr = (uint8_t*)kmap(code_phys);
+    char*    data_ptr = (char*)kmap(data_phys);
+    if (!code_ptr || !data_ptr) {
+        printf("two-proc test: kmap failed for user pages\n");
+        if (code_ptr) kunmap(code_ptr);
+        if (data_ptr) kunmap(data_ptr);
+        return NULL;
+    }
+
+    // Initialize pages
+    memset(code_ptr, 0x90, PAGE_SIZE); // NOP pad
+    memset(data_ptr, 0x00, PAGE_SIZE);
+
+    // Stash message in data page at offset 0
+    size_t msg_len = strlen(msg);
+    memcpy(data_ptr, msg, msg_len);
+    data_ptr[msg_len] = '\0';
+
+    // Emit tiny user program:
+    //   mov eax, SYS_PRINT_STRING
+    //   mov ebx, USER_TEST_DATA_VA
+    //   mov ecx, msg_len
+    //   int 0x80
+    //   jmp $
+    size_t idx = 0;
+    uint32_t imm;
+
+    imm = SYS_PRINT_STRING;
+    code_ptr[idx++] = 0xB8; // mov eax, imm32
+    memcpy(&code_ptr[idx], &imm, sizeof(imm)); idx += sizeof(imm);
+
+    imm = USER_TEST_DATA_VA; // message at offset 0
+    code_ptr[idx++] = 0xBB; // mov ebx, imm32
+    memcpy(&code_ptr[idx], &imm, sizeof(imm)); idx += sizeof(imm);
+
+    imm = (uint32_t)msg_len;
+    code_ptr[idx++] = 0xB9; // mov ecx, imm32
+    memcpy(&code_ptr[idx], &imm, sizeof(imm)); idx += sizeof(imm);
+
+    code_ptr[idx++] = 0xCD; // int 0x80
+    code_ptr[idx++] = 0x80;
+
+    code_ptr[idx++] = 0xEB; // jmp $
+    code_ptr[idx++] = 0xFE;
+
+    // Create process structure with entry at USER_TEST_CODE_VA and a 4 KiB stack
+    proc_t* p = create_proc((void*)USER_TEST_CODE_VA, 0, PAGE_SIZE, 0, PROC_PRIORITY_NORMAL);
+    if (!p) {
+        printf("two-proc test: create_proc failed\n");
+        kunmap(code_ptr);
+        kunmap(data_ptr);
+        return NULL;
+    }
+
+    // Map the prepared frames into the new process's address space
+    if (proc_map_pages(p, USER_TEST_CODE_VA, code_phys, 1, true) != 0) {
+        printf("two-proc test: map code failed\n");
+        kunmap(code_ptr);
+        kunmap(data_ptr);
+        return NULL;
+    }
+    if (proc_map_pages(p, USER_TEST_DATA_VA, data_phys, 1, true) != 0) {
+        printf("two-proc test: map data failed\n");
+        kunmap(code_ptr);
+        kunmap(data_ptr);
+        return NULL;
+    }
+
+    // Drop temporary kernel mappings
+    kunmap(code_ptr);
+    kunmap(data_ptr);
+
+    return p;
+}
+
+static void kernel_two_process_test(void) {
+    // Messages mirror the original single-process demo
+    const char* m1 = "[1] hello world from a process";
+    const char* m2 = "[2] hello world from another process";
+
+    proc_t* p1 = make_user_proc_with_message(m1);
+    proc_t* p2 = make_user_proc_with_message(m2);
+    if (!p1 || !p2) {
+        printf("two-proc test: failed to set up processes\n");
+        return;
+    }
+
+    printf("Launching two user processes; scheduler should alternate prints...\n");
+    // Enter first process; PIT will preempt and round-robin to the second
+    proc_enter(p1);
+    // Not reached unless something unusual occurs
+    printf("two-proc test: returned unexpectedly from user mode\n");
+}
+
 #ifndef KERNEL_VERSION
 #define KERNEL_VERSION "0.0.1"
 #endif
@@ -185,6 +298,9 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	pit_init(1000);
 	//init_hpet(10000);
 	
-	kernel_process_test();
+	// Original single-process demo:
+	// kernel_process_test();
+	// New two-process scheduling demo:
+	kernel_two_process_test();
 	kpause();
 }

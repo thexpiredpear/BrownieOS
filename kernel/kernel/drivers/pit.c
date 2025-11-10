@@ -15,6 +15,7 @@ void pit_handler(int_regs_t* registers) {
     // Every SCHED_SLICE_SECONDS, preempt user and round-robin to next.
     uint64_t slice = (uint64_t)pit_cur_frequency * (uint64_t)SCHED_SLICE_SECONDS;
     if (slice && (registers->cs & 3) == 3 && (tick % slice) == 0) {
+        printf("PIT: scheduling tick %llu\n", tick);
         scheduler_switch_next(registers);
     }
     return;

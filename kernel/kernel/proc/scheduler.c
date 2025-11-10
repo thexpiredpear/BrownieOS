@@ -46,15 +46,13 @@ void scheduler_init(void) { }
 void scheduler_switch_process(proc_t* next, int_regs_t* regs) {
     if (!next || next == current_proc) return;
 
-    // Save current user context
     proc_context_from_regs(&current_proc->context, regs);
 
-    // Switch kernel stack and address space for next process
     tss_set_kernel_stack((uint32_t)next->kstack_top);
     swap_dir(next->page_directory);
     current_proc = next;
 
-    // Prepare the interrupt frame to return into `next`
+    // Put the next process's context into regs, so on iret we enter next.
     proc_context_to_regs(regs, &next->context);
 }
 
