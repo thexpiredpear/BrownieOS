@@ -43,9 +43,7 @@ void kernel_proc_init(void) {
 #endif
 }
 
-void scheduler_init(void) {
-    // Scheduler will populate run queues in a later task.
-}
+// See kernel/proc/scheduler.c for scheduler implementation.
 
 int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, bool writable) {
     if (!proc || !proc->page_directory || pages == 0) {

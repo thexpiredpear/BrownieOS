@@ -4,12 +4,19 @@
 #include <core/isr.h>
 #include <drivers/pit.h>
 #include <core/common.h>
+#include <proc/scheduler.h>
 
 double pit_osc_frequency = 3579545.0 / 3.0;
+static uint32_t pit_cur_frequency = 0;
 uint64_t tick = 0;
 
 void pit_handler(int_regs_t* registers) {
     tick++;
+    // Every SCHED_SLICE_SECONDS, preempt user and round-robin to next.
+    uint64_t slice = (uint64_t)pit_cur_frequency * (uint64_t)SCHED_SLICE_SECONDS;
+    if (slice && (registers->cs & 3) == 3 && (tick % slice) == 0) {
+        scheduler_switch_next(registers);
+    }
     return;
 }
 

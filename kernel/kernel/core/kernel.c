@@ -26,8 +26,8 @@ extern page_directory_t* kernel_directory;
 
 enum { USER_TEST_MESSAGE_COUNT = 2 };
 static const char* const user_test_messages[USER_TEST_MESSAGE_COUNT] = {
-    "[0] hello world from a process",
-    "[1] hello world from another process",
+    "[1] hello world from a process",
+    "[2] hello world from another process",
 };
 
 static void kernel_process_test(void) {
