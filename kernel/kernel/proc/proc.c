@@ -246,19 +246,3 @@ void proc_context_to_regs(int_regs_t* dest, const proc_context_t* src) {
     dest->useresp = src->useresp;
     dest->ss = src->ss;
 }
-
-void scheduler_save_current_context(const int_regs_t* regs) {
-    if (!regs || !current_proc) {
-        return;
-    }
-
-    proc_context_from_regs(&current_proc->context, regs);
-}
-
-void scheduler_prepare_switch(proc_t* next_proc, int_regs_t* regs) {
-    if (!next_proc || !regs) {
-        return;
-    }
-
-    proc_context_to_regs(regs, &next_proc->context);
-}

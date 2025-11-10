@@ -86,10 +86,6 @@ void kernel_proc_init(void);
 // Maps `pages` pages starting at `phys` to `virt` in the given process's page directory.
 // Returns 0 on success, -1 on failure.
 int proc_map_pages(proc_t* proc, uint32_t virt, uint32_t phys, uint32_t pages, bool writable);
-// Placeholder scheduler bootstrap (to be implemented); prepares run queue state.
-void scheduler_init(void);
-void scheduler_save_current_context(const int_regs_t* regs);
-void scheduler_prepare_switch(proc_t* next_proc, int_regs_t* regs);
 // Creates a new user process with a private page directory cloned from the
 // kernel directory: allocates user stack pages (physical HIGHMEM) and maps them
 // into the process address space, sets initial context with `entry` (virtual).
