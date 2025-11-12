@@ -133,7 +133,7 @@ static proc_t* make_user_proc_with_message(const char* msg) {
     uint32_t code_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
     uint32_t data_phys = alloc_pages(PMM_FLAGS_HIGHMEM, 1);
     if (!code_phys || !data_phys) {
-        printf("two-proc test: failed to allocate user pages\n");
+        printf("failed to allocate user pages\n");
         return NULL;
     }
 
@@ -141,7 +141,7 @@ static proc_t* make_user_proc_with_message(const char* msg) {
     uint8_t* code_ptr = (uint8_t*)kmap(code_phys);
     char*    data_ptr = (char*)kmap(data_phys);
     if (!code_ptr || !data_ptr) {
-        printf("two-proc test: kmap failed for user pages\n");
+        printf("kmap failed for user pages\n");
         if (code_ptr) kunmap(code_ptr);
         if (data_ptr) kunmap(data_ptr);
         return NULL;
@@ -213,23 +213,25 @@ static proc_t* make_user_proc_with_message(const char* msg) {
     return p;
 }
 
-static void kernel_two_process_test(void) {
+static void kernel_three_process_test(void) {
     // Messages mirror the original single-process demo
     const char* m1 = "[1] hello world from a process";
     const char* m2 = "[2] hello world from another process";
+    const char* m3 = "[3] hello world from yet another process";
 
     proc_t* p1 = make_user_proc_with_message(m1);
     proc_t* p2 = make_user_proc_with_message(m2);
-    if (!p1 || !p2) {
-        printf("two-proc test: failed to set up processes\n");
+    proc_t* p3 = make_user_proc_with_message(m3);
+    if (!p1 || !p2 || !p3) {
+        printf("three-proc test: failed to set up processes\n");
         return;
     }
 
-    printf("Launching two user processes; scheduler should alternate prints...\n");
+    printf("Launching three user processes; scheduler should alternate prints...\n");
     // Enter first process; PIT will preempt and round-robin to the second
     proc_enter(p1);
     // Not reached unless something unusual occurs
-    printf("two-proc test: returned unexpectedly from user mode\n");
+    printf("three-proc test: returned unexpectedly from user mode\n");
 }
 
 #ifndef KERNEL_VERSION
@@ -300,7 +302,6 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	
 	// Original single-process demo:
 	// kernel_process_test();
-	// New two-process scheduling demo:
-	kernel_two_process_test();
+	kernel_three_process_test();
 	kpause();
 }
