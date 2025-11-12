@@ -170,6 +170,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
     proc->context.useresp = stack_top - 16; // initial user-mode stack pointer
     proc->context.cs = 0x1B; // User mode code selector (GDT index 3 | RPL=3)
     proc->context.ss = 0x23; // User mode data selector (GDT index 4 | RPL=3)
+    proc->context.eflags = 0x202; // IF=1, reserved bit always set
 
     // Allocate a per-process kernel stack for privilege transitions
     proc->kstack_size = 8192; // 8 KiB
