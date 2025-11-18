@@ -24,7 +24,7 @@ The shell script build.sh will create a sysroot dir which the final iso image is
 
 ## Roadmap
 
-### 1: Pre-Userspace
+### 1: Kernelspace Setup
 #### I've decided against enabling SMP for now, but will implement concurrency primitives - the (IO)APIC complexity is unnecessary 
 - [x] Initialize System
     - [x] Boot
@@ -42,6 +42,8 @@ The shell script build.sh will create a sysroot dir which the final iso image is
     - [x] VMM
     - [x] kmalloc()
 
+### 2: Processes, Multitasking, and Scheduling
+
 - [x] Multitasking (Finished as of 11/18)
     - [x] APIC
         - [x] Parse MADT
@@ -52,7 +54,11 @@ The shell script build.sh will create a sysroot dir which the final iso image is
     - [x] Context Switch
     - [x] Scheduler
 
-- [ ] LibC expansion
+### 3: Functionality Expansion
+
+- [ ] Filesystem
+- [ ] User Input
+- [ ] Shell
 
 ## Credits
 
