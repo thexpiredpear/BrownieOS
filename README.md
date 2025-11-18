@@ -37,20 +37,20 @@ The shell script build.sh will create a sysroot dir which the final iso image is
     - [x] PIT
     - [x] Parse ACPI Tables
 
-- [x] Kernel Memory
+- [x] Kernel Memory Management
     - [x] PMM
     - [x] VMM
     - [x] kmalloc()
 
-- [ ] Multitasking
+- [x] Multitasking (Finished as of 11/18)
     - [x] APIC
         - [x] Parse MADT
         - [x] LAPIC
         - [x] IOAPIC
     - [x] HPET
     - [x] Abstract Userspace Process
-    - [ ] Context Switch
-    - [ ] Scheduler
+    - [x] Context Switch
+    - [x] Scheduler
 
 - [ ] LibC expansion
 
