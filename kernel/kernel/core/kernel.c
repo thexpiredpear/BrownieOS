@@ -121,8 +121,8 @@ static void kernel_single_process_test(void) {
     printf("syscall demo: returned unexpectedly from user mode\n");
 }
 
-// --- Two-process scheduling demo ---
-// Creates two independent user processes. Each process maps its own code and
+// --- Three-process scheduling demo ---
+// Creates three independent user processes. Each process maps its own code and
 // data page at identical virtual addresses, prints a unique message via
 // SYS_PRINT_STRING, then spins forever. The PIT preempts from user mode and
 // the simple RR scheduler alternates execution between them.
@@ -229,6 +229,7 @@ static void kernel_three_process_test(void) {
 
     printf("Launching three user processes; scheduler should alternate prints...\n");
     // Enter first process; PIT will preempt and round-robin to the second
+    printf("Jumping to first process, entering user mode for the first time via iret\n");
     proc_enter(p1);
     // Not reached unless something unusual occurs
     printf("three-proc test: returned unexpectedly from user mode\n");

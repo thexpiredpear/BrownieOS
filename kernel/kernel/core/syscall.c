@@ -113,6 +113,7 @@ void syscall_dispatch(int_regs_t* regs) {
 }
 
 void sys_print_string(int_regs_t* regs) {
+    printf("printf syscall called from process %u\n", current_proc ? current_proc->pid : 0);
     if(regs == NULL) {
         return;
     }

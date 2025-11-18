@@ -180,9 +180,7 @@ proc_t* create_proc(void* entry, uint32_t exec_size, uint32_t stack_size, uint32
 
     proc_list[proc_idx] = proc; // Add to process list
     proc->procstate = PROC_RUNNING; // Or PROC_READY if we had a scheduler
-#ifdef PROC_DEBUG
-    printf("Created process with PID %d, slot %d\n", proc->pid, proc_idx);
-#endif
+    printf("Created process with PID %u, entry point at vaddr %x\n", proc->pid, entry);
     return proc;
 }
 

@@ -51,8 +51,9 @@ void scheduler_switch_process(proc_t* next, int_regs_t* regs) {
     tss_set_kernel_stack((uint32_t)next->kstack_top);
     swap_dir(next->page_directory);
     current_proc = next;
+    printf("Scheduler: switching to process #%u\n", current_proc->pid);
 
-    // Put the next process's context into regs, so on iret we enter next.
+    // Put the next process's context into regs, so on iret we  next.
     proc_context_to_regs(regs, &next->context);
 }
 
