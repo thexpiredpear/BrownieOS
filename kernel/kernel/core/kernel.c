@@ -7,6 +7,7 @@
 #include <core/gdt.h>
 #include <core/idt.h>
 #include <drivers/pit.h>
+#include <drivers/ata.h>
 #include <core/isr.h>
 #include <core/syscall.h>
 #include <core/acpi.h>
@@ -300,6 +301,7 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	//init_apic();
 	pit_init(1000);
 	//init_hpet(10000);
+	ata_init();
 	
 	// Original single-process demo:
 	// kernel_process_test();

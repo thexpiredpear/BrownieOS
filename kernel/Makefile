@@ -47,6 +47,7 @@ kernel/core/interrupts/idt.o \
 kernel/core/interrupts/apic.o \
 kernel/core/interrupts/ioapic.o \
 kernel/drivers/tty.o \
+kernel/drivers/ata.o \
 kernel/drivers/pit.o \
 kernel/drivers/hpet.o \
 kernel/mm/kmm.o \
