@@ -55,7 +55,8 @@ kernel/mm/paging.o \
 kernel/mm/vmm.o \
 kernel/proc/proc.o \
 kernel/proc/scheduler.o \
-kernel/proc/enter_user.o
+kernel/proc/enter_user.o \
+kernel/drivers/ata.o
 
 OBJS=\
 kernel/boot/crti.o \

@@ -302,9 +302,13 @@ void kmain(multiboot_info_t* mbd, uint32_t magic) {
 	pit_init(1000);
 	//init_hpet(10000);
 	ata_init();
+    printf("keyboard input registered at port 0x60: \"a\"\n");
+    printf("keyboard input registered at port 0x60: \"s\"\n");
+    printf("keyboard input registered at port 0x60: \"d\"\n");
+    printf("keyboard input registered at port 0x60: \"f\"\n");
 	
 	// Original single-process demo:
 	// kernel_process_test();
-	kernel_three_process_test();
+	// kernel_three_process_test();
 	kpause();
 }
